@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="WARWATCHER — Real-time conflict intelligence hub. Live military, diplomatic, nuclear and regional threat monitoring across 50 global sources.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23ff2038'/><stop offset='1' stop-color='%23ff9000'/></linearGradient></defs><text x='50%' y='52%' dominant-baseline='central' text-anchor='middle' font-family='Courier New,monospace' font-weight='bold' font-size='24' fill='url(%23g)'>W</text></svg>">
+<title>WARWATCHER — Conflict Intelligence Hub</title>
+<script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#020810;--p1:#040d1c;--p2:#071220;--p3:#0b1828;
+  --b1:#162840;--b2:#1e3858;
+  --t1:#a8ccec;--t2:#6a96c0;--t3:#385878;
+  --red:#ff2038;--redb:rgba(255,32,56,.14);
+  --amber:#ff9000;--amberb:rgba(255,144,0,.14);
+  --blue:#3a80ff;--blueb:rgba(58,128,255,.14);
+  --teal:#00cce0;--tealb:rgba(0,204,224,.14);
+  --green:#00e87a;
+  --purple:#9040ff;--purpleb:rgba(144,64,255,.14);
+  --urg:#ffe030;--urgb:rgba(255,224,48,.14);
+  --font:'Courier New',monospace
+}
+*{scrollbar-width:thin;scrollbar-color:var(--b1) transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--t1);font-family:var(--font);display:flex;flex-direction:column;
+  background-image:radial-gradient(ellipse 80% 50% at 0% 0%,rgba(255,32,56,.04) 0%,transparent 60%),
+                   radial-gradient(ellipse 80% 50% at 100% 100%,rgba(58,128,255,.04) 0%,transparent 60%)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.07}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slidein{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+
+/* ── HEADER ──────────────────────────────────────────────────────── */
+header{flex-shrink:0;height:62px;background:linear-gradient(180deg,#08152a,var(--p1));
+  border-bottom:2px solid var(--b1);display:flex;align-items:center;padding:0 25px;gap:18px}
+.logo-top{font-size:23px;font-weight:bold;letter-spacing:6px;color:var(--red);
+  text-shadow:0 0 20px rgba(255,32,56,.5),0 0 50px rgba(255,32,56,.15)}
+.logo-top b{color:var(--amber)}
+.logo-sub{font-size:8px;letter-spacing:3px;color:var(--t3);margin-top:2px}
+.hdiv{width:1px;height:36px;background:var(--b1);flex-shrink:0}
+.tw{flex:1;height:28px;overflow:hidden;position:relative}
+.tw::before,.tw::after{content:'';position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.tw::before{left:0;background:linear-gradient(to right,var(--p1),transparent)}
+.tw::after{right:0;background:linear-gradient(to left,var(--p1),transparent)}
+.tw-label{position:absolute;left:0;top:0;bottom:0;z-index:3;background:var(--red);
+  color:#fff;font-size:8px;letter-spacing:2px;font-weight:bold;
+  display:flex;align-items:center;padding:0 10px;white-space:nowrap;
+  text-shadow:none;box-shadow:4px 0 14px rgba(255,32,56,.6)}
+.ticker-track{display:flex;white-space:nowrap;height:28px;align-items:center;
+  padding-left:130px;transform:translateX(0)}
+.ticker-a,.ticker-b{display:inline-flex;align-items:center;white-space:nowrap;flex-shrink:0}
+.tick-urg{color:var(--urg);font-size:13px;font-weight:bold;letter-spacing:1px}
+.tick-mil{color:#ff8090;font-size:13px;font-weight:bold;letter-spacing:1px}
+.tick-nuc{color:var(--amber);font-size:13px;font-weight:bold;letter-spacing:1px}
+.tick-dim{color:var(--t2);font-size:12px;font-weight:normal;letter-spacing:.5px}
+.tick-badge{font-size:8px;letter-spacing:2px;border:1px solid currentColor;
+  padding:1px 5px;margin-right:8px;vertical-align:middle;opacity:.9}
+.tick-src{font-size:10px;opacity:.6;margin-right:6px}
+.tick-sep{color:var(--b2);margin:0 18px;font-size:14px}
+.clk{flex-shrink:0;text-align:right}
+.clk-t{font-size:24px;letter-spacing:3px;color:#daeeff;font-weight:bold;line-height:1;text-shadow:0 0 16px rgba(180,220,255,.25)}
+.clk-d{font-size:9px;color:var(--t3);letter-spacing:1px;margin-top:2px}
+.clk-live{font-size:8px;letter-spacing:2px;color:var(--green);display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:2px}
+.clk-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.4s ease-in-out infinite}
+
+/* ── TOOLBAR ─────────────────────────────────────────────────────── */
+.toolbar{flex-shrink:0;height:57px;background:var(--p2);border-bottom:2px solid var(--b1);
+  display:flex;align-items:center;padding:0 22px;gap:12px}
+.vtog{display:flex;height:41px;border:2px solid var(--teal);
+  box-shadow:0 0 20px rgba(0,204,224,.3),inset 0 0 20px rgba(0,204,224,.04)}
+.vbtn{padding:0 28px;background:transparent;border:none;
+  color:var(--t2);font-family:var(--font);font-size:11.5px;letter-spacing:3px;
+  cursor:pointer;text-transform:uppercase;transition:.14s;white-space:nowrap}
+.vbtn+.vbtn{border-left:1px solid rgba(0,204,224,.35)}
+.vbtn:hover{color:var(--teal);background:rgba(0,204,224,.08)}
+.vbtn.on{background:var(--tealb);color:var(--teal);font-weight:bold;text-shadow:0 0 14px rgba(0,204,224,.8)}
+.bar-r{display:flex;align-items:center;gap:8px;margin-left:auto}
+.acnt{font-size:8px;color:var(--t3);letter-spacing:1px;white-space:nowrap}
+.rbtn{height:39px;padding:0 21px;background:rgba(255,32,56,.12);
+  border:1px solid rgba(255,32,56,.6);color:var(--red);
+  font-family:var(--font);font-size:9px;letter-spacing:2px;cursor:pointer;transition:.14s;
+  text-shadow:0 0 10px rgba(255,32,56,.4)}
+.rbtn:hover:not(:disabled){background:rgba(255,32,56,.25);border-color:var(--red)}
+.rbtn:disabled{opacity:.2;cursor:not-allowed}
+
+/* ── LANGUAGE SELECTOR ──────────────────────────────── */
+.lang-wrap{position:relative;flex-shrink:0}
+.lang-btn{height:39px;padding:0 13px;background:var(--p3);border:1px solid var(--b2);
+  color:var(--t2);font-family:var(--font);font-size:10px;letter-spacing:2px;cursor:pointer;
+  display:flex;align-items:center;gap:7px;transition:.14s;white-space:nowrap;text-transform:uppercase}
+.lang-btn:hover{background:var(--b1);color:var(--t1);border-color:var(--t3)}
+.lang-btn.open{background:var(--p1);border-color:var(--teal);color:var(--teal);
+  box-shadow:0 0 12px rgba(0,204,224,.2)}
+.lang-flag{font-size:15px;line-height:1}
+.lang-code{font-size:10px;letter-spacing:2px}
+.lang-arrow{font-size:8px;opacity:.5;transition:transform .15s;margin-left:1px}
+.lang-btn.open .lang-arrow{transform:rotate(180deg);opacity:1}
+.lang-menu{
+  display:none;position:absolute;top:calc(100% + 5px);right:0;
+  background:var(--p1);border:1px solid var(--b2);z-index:9000;min-width:148px;
+  box-shadow:0 12px 40px rgba(0,0,0,.85);
+  border-top:2px solid var(--teal);
+}
+.lang-menu.open{display:block}
+.lang-opt{
+  display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;
+  background:none;border:none;border-bottom:1px solid var(--b1);
+  color:var(--t2);font-family:var(--font);font-size:10px;letter-spacing:1.5px;
+  cursor:pointer;text-align:left;transition:.12s;white-space:nowrap
+}
+.lang-opt:last-child{border-bottom:none}
+.lang-opt:hover{background:var(--b1);color:var(--t1)}
+.lang-opt.active{color:var(--teal);background:var(--tealb);border-left:2px solid var(--teal)}
+
+/* ── PROGRESS ────────────────────────────────────────────────────── */
+.prog-wrap{flex-shrink:0;height:2px;background:var(--p3)}
+.prog{height:100%;background:linear-gradient(to right,var(--red),var(--amber));width:0%;transition:width .3s}
+
+/* ══════════════════════════════════════════════════════════════════
+   DESKTOP LAYOUT: flex row — [side panel always open] [globe] [feed panel]
+   ══════════════════════════════════════════════════════════════════ */
+.main{flex:1;display:flex;flex-direction:row;overflow:hidden;min-height:0}
+
+/* ── SIDE PANEL (left, always visible on desktop) ──────────────── */
+.side{
+  flex-shrink:0;
+  /* Always open on desktop — no toggle needed */
+  width:280px;
+  overflow-y:auto;
+  background:var(--p1);
+  border-right:2px solid var(--b1);
+  display:flex;
+  flex-direction:column;
+  /* Keep transition for mobile slide */
+  transition:width .26s cubic-bezier(.4,0,.2,1), border-right-width .26s;
+}
+/* .open class kept for JS compatibility but not needed on desktop */
+.side-inner{min-width:280px}
+.side-tab{display:none}
+
+/* ── GLOBE (center, fills remaining space) ─────────────────────── */
+.globe-panel{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+
+/* ── FEED PANEL (right, collapsible) ───────────────────────────── */
+.feed-panel{
+  flex-shrink:0;
+  width:0;overflow:hidden;
+  background:var(--p2);
+  border-left:0 solid var(--b1);
+  display:flex;flex-direction:column;
+  transition:width .26s cubic-bezier(.4,0,.2,1), border-left-width .26s;
+}
+.feed-panel.open{width:420px;border-left-width:2px;overflow:visible}
+.feed-overlay{display:none}
+
+.feed-panel-hdr{
+  flex-shrink:0;min-width:420px;padding:9px 14px;
+  background:var(--p2);border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;gap:8px}
+.feed-panel-hdr .slbl{margin:0;font-size:8px;letter-spacing:3px;color:var(--t2);flex:1}
+.feed-panel-hdr .slbl::after{display:none}
+.feed-filters{
+  flex-shrink:0;min-width:420px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+  padding:6px 12px;background:var(--p1);border-bottom:1px solid var(--b1)}
+.ff-btn{height:26px;padding:0 9px;background:var(--p3);border:1px solid var(--b2);
+  color:var(--t3);font-family:var(--font);font-size:9px;letter-spacing:1.5px;
+  cursor:pointer;white-space:nowrap;transition:.12s}
+.ff-btn:hover{color:var(--t1);border-color:var(--t2)}
+.ff-btn.on{background:var(--redb);border-color:var(--red);color:var(--red)}
+.ff-sep{width:1px;height:20px;background:var(--b1);margin:0 2px;flex-shrink:0}
+.feed-panel-body{flex:1;overflow-y:auto;padding:10px;min-width:420px}
+.slbl{font-size:8px;letter-spacing:3px;color:var(--t3);text-transform:uppercase;
+  margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--b1)}
+.grid{display:grid;grid-template-columns:1fr;gap:7px;align-content:start}
+.card{background:var(--p2);border:1px solid var(--b1);border-top:2px solid transparent;
+  padding:14px;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;
+  transition:background .14s,transform .14s,box-shadow .14s}
+.card:hover{background:var(--p3);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.7)}
+.card.mil{border-top-color:var(--red)}.card.dip{border-top-color:var(--blue)}
+.card.nuc{border-top-color:var(--amber)}.card.reg{border-top-color:var(--purple)}
+.card.urg{border-top-color:var(--urg);box-shadow:0 0 12px rgba(255,224,48,.08)}
+.card.is-new{animation:slidein .36s cubic-bezier(.22,.68,0,1.1) both}
+.cmeta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.ctag{font-size:8px;letter-spacing:2px;padding:1px 5px;border:1px solid currentColor;text-transform:uppercase;flex-shrink:0}
+.ctag.mil{color:var(--red)}.ctag.dip{color:var(--blue)}.ctag.nuc{color:var(--amber)}
+.ctag.reg{color:var(--purple)}.ctag.urg{color:var(--urg)}
+.csrc{font-size:10.5px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctm{font-size:9px;color:var(--t3);margin-left:auto;flex-shrink:0}
+.ctitle{font-size:14px;color:#c2d8f0;line-height:1.45}
+.csum{font-size:11.5px;color:var(--t3);line-height:1.6}
+.ld{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:12px;color:var(--t3)}
+.sp{width:32px;height:32px;border:2px solid var(--b1);border-top-color:var(--red);border-radius:50%;animation:spin 1s linear infinite}
+.ld-sub{font-size:9px;color:var(--t3);letter-spacing:1px;text-align:center;line-height:2}
+.errbox{grid-column:1/-1;border:1px solid rgba(255,32,56,.18);background:rgba(255,32,56,.04);padding:18px;color:#992030;font-size:11.5px;text-align:center;line-height:2}
+
+/* ── GLOBE PANEL ─────────────────────────────────────────────────── */
+#globe-wrap{flex:1;background:radial-gradient(ellipse at center,#051428 0%,#010810 70%)}
+.gst{display:flex;flex-direction:column;align-items:center;padding:5px 14px;border-left:1px solid var(--b1)}
+.gst-v{font-size:18px;font-weight:bold;letter-spacing:1px;line-height:1}
+.gst-l{font-size:8px;letter-spacing:2px;color:var(--t3);margin-top:2px;text-transform:uppercase}
+.gping{position:relative;cursor:pointer;transform:translate(-50%,-50%)}
+.gping-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(45deg);
+  border:2px solid currentColor;transition:transform .15s}
+.gping:hover .gping-core{transform:translate(-50%,-50%) rotate(45deg) scale(1.4)}
+.gping-ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1.5px solid currentColor;
+  transform:translate(-50%,-50%);animation:ping-expand 2.2s ease-out infinite;opacity:0}
+.gping-ring2{animation-delay:1.1s}
+@keyframes ping-expand{
+  0%{width:6px;height:6px;opacity:.9}
+  80%{opacity:.15}
+  100%{width:38px;height:38px;opacity:0}
+}
+.gping.lv3{color:#ff2038}
+.gping.lv2{color:#ff9000}
+.gping.lv1{color:#ff6655}
+.gping.cat-nuc{color:#ffc400}
+.gping.cat-dip{color:#3a80ff}
+.gping.cat-reg{color:#9040ff}
+.gping.cat-urg{color:#ffe030}
+.gping.cat-mil{color:#ff2038}
+.gping.stale{opacity:.28!important;filter:grayscale(.7)}
+.gping.old{opacity:.13!important;filter:grayscale(1)}
+.gping-hline,.gping-vline{position:absolute;background:currentColor;opacity:.35}
+.gping-hline{width:14px;height:1px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.gping-vline{width:1px;height:14px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.gleg{position:absolute;bottom:16px;left:16px;z-index:200;
+  background:rgba(2,8,16,.9);border:1px solid var(--b1);padding:12px 14px;backdrop-filter:blur(8px)}
+.gleg-hd{font-size:8px;letter-spacing:3px;color:var(--t3);margin-bottom:9px;text-transform:uppercase}
+.gleg-row{display:flex;align-items:center;gap:9px;font-size:10.5px;color:var(--t2);margin-bottom:6px}
+.gleg-row:last-child{margin-bottom:0}
+.gleg-circ{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.gleg-star{font-size:12px;width:9px;flex-shrink:0;line-height:9px;text-align:center}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────── */
+.sbox{border-bottom:1px solid var(--b1)}
+.sbh{background:var(--p2);padding:9px 15px;display:flex;align-items:center;gap:7px;
+  font-size:8px;letter-spacing:3px;color:var(--t2);text-transform:uppercase;border-bottom:1px solid var(--b1)}
+.sbh-r{margin-left:auto;font-size:11.5px;font-weight:bold}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0}
+.dot.g{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease-in-out infinite}
+.dot.a{background:var(--amber);box-shadow:0 0 5px var(--amber)}
+.dot.off{background:var(--b1)}
+.sbb{padding:14px 15px}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px}
+.tc{background:var(--p3);border:1px solid var(--b1);padding:10px;text-align:center}
+.tv{font-size:21px;letter-spacing:1px;font-weight:bold;line-height:1}
+.tl{font-size:8px;letter-spacing:2px;color:var(--t3);margin-top:3px;text-transform:uppercase}
+.ttrack{height:4px;background:var(--p3);border:1px solid var(--b1);margin-bottom:5px}
+.tfill{height:100%;background:linear-gradient(to right,var(--green),var(--amber),var(--red));transition:width 1.4s ease;width:0%}
+.tmarks{display:flex;justify-content:space-between;font-size:8px;color:var(--b2);letter-spacing:1px;margin-bottom:8px}
+.tdesc{font-size:9px;letter-spacing:1px;color:var(--t3);text-align:center}
+.srclist{display:flex;flex-direction:column}
+.si{display:flex;align-items:center;gap:7px;font-size:10px;padding:6px 15px;border-bottom:1px solid rgba(14,26,44,.9)}
+.si.ok{color:var(--t2)}.si.fail{color:var(--t3);text-decoration:line-through}.si.swap{color:var(--amber)}.si.pend{color:var(--t3)}
+.si-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-ic{font-size:10px;flex-shrink:0}
+
+/* ── SIDE PANEL (left, always visible) ─────────────────────────── */
+.side{
+  flex-shrink:0;width:280px;overflow:hidden;
+  background:var(--p1);border-right:2px solid var(--b1);
+  display:flex;flex-direction:column;
+}
+.side-inner{min-width:280px;overflow-y:auto;flex:1}
+.side-inner::-webkit-scrollbar{display:none}
+.side-inner{-ms-overflow-style:none;scrollbar-width:none}
+
+/* ── SEPARATOR ───────────────────────────────────────── */
+.sep-inner{display:block;width:1px;height:34px;background:var(--b1);margin:0 6px;flex-shrink:0}
+
+/* ── BOTTOM NAV (mobile only) ──────────────────────────*/
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:9000;
+  height:56px;background:rgba(4,13,28,.97);border-top:1px solid var(--b1);
+  backdrop-filter:blur(12px);display:none;align-items:stretch}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:none;border:none;border-right:1px solid var(--b1);
+  color:var(--t3);font-family:var(--font);font-size:7px;letter-spacing:1.5px;
+  cursor:pointer;gap:4px;text-transform:uppercase;transition:.15s;
+  -webkit-tap-highlight-color:transparent;min-height:44px}
+.bnav-btn:last-child{border-right:none}
+.bnav-btn.on{color:var(--teal);background:rgba(0,204,224,.08)}
+.bnav-btn.on.red{color:var(--red);background:var(--redb)}
+.bnav-ic{font-size:20px;line-height:1}
+
+.side-overlay{display:none;position:fixed;inset:0;z-index:7999;background:rgba(0,0,0,.65);backdrop-filter:blur(2px)}
+.side-overlay.open{display:block}
+
+/* ── MOBILE ─────────────────────────────────────────── */
+body.is-mobile header{height:46px;padding:0 12px;gap:8px}
+body.is-mobile .logo-top{font-size:16px;letter-spacing:3px}
+body.is-mobile .logo-sub{font-size:6px;letter-spacing:1px}
+body.is-mobile .tw{display:none}
+body.is-mobile .hdiv{display:none}
+body.is-mobile .clk-t{font-size:17px;letter-spacing:2px}
+body.is-mobile .clk-d{font-size:7px}
+body.is-mobile .clk-live{font-size:7px}
+body.is-mobile .toolbar{display:none}
+body.is-mobile .prog-wrap{display:none}
+body.is-mobile .main{flex-direction:column;padding-bottom:56px;}
+body.is-mobile .globe-panel{position:absolute;inset:0;bottom:56px;display:none;}
+body.is-mobile .globe-panel.mob-active{display:flex}
+body.is-mobile .side{
+  position:absolute;inset:0;bottom:56px;
+  width:100%;overflow-y:auto;
+  display:none;border-right:none;
+}
+body.is-mobile .side.mob-active{display:flex;flex-direction:column}
+body.is-mobile .side-inner{min-width:unset;width:100%}
+body.is-mobile .feed-panel{
+  position:absolute;inset:0;bottom:56px;
+  width:100%;overflow:hidden;display:none;border-left:none;
+}
+body.is-mobile .feed-panel.mob-active{display:flex;flex-direction:column}
+body.is-mobile .feed-panel-hdr,
+body.is-mobile .feed-filters,
+body.is-mobile .feed-panel-body{min-width:unset;width:100%}
+body.is-mobile .feed-panel-body{padding:10px 10px 10px}
+body.is-mobile .ctitle{font-size:13px}
+body.is-mobile .csum{font-size:11px}
+body.is-mobile .gleg{bottom:10px;left:10px;padding:8px 10px}
+body.is-mobile .gleg-row{font-size:9px}
+body.is-mobile .bnav{display:flex}
+
+/* Hard stop — never show bnav on screens wider than 900px regardless of JS */
+@media(min-width:901px){.bnav{display:none!important}}
+
+/* ── BOOT OVERLAY ───────────────────────────────────── */
+#boot-overlay{
+  position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;
+  background:#020810;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,32,56,.06) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, #020810 0%, #010610 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;opacity:1;transition:opacity .5s ease;pointer-events:all;
+  will-change:opacity;transform:translateZ(0);
+}
+#boot-overlay.hidden{opacity:0;pointer-events:none;}
+
+.boot-logo{font-size:clamp(28px,5vw,52px);font-weight:bold;letter-spacing:10px;
+  color:var(--red);text-shadow:0 0 40px rgba(255,32,56,.5),0 0 80px rgba(255,32,56,.2);
+  font-family:var(--font)}
+.boot-logo b{color:var(--amber)}
+.boot-sub{font-size:10px;letter-spacing:5px;color:var(--t3);margin-top:6px;margin-bottom:48px}
+
+.boot-msg{font-size:12px;letter-spacing:3px;color:var(--t2);height:18px;
+  font-family:var(--font);text-align:center;min-width:320px}
+.boot-cursor{animation:blink .7s step-end infinite;color:var(--red)}
+
+.boot-scanbar{width:clamp(260px,40vw,480px);height:2px;background:var(--b1);
+  margin-top:14px;overflow:hidden;position:relative}
+.boot-scanfill{height:100%;background:linear-gradient(to right,var(--red),var(--amber));
+  width:0%;transition:width .25s linear}
+
+/* ── BOOT HEX: full-screen coverage ───────────────────
+   Fill the entire viewport with hex chars.
+   Use word-break so the text wraps edge-to-edge.         */
+.boot-hex{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:.055;
+}
+.boot-hex-inner{
+  font-family:var(--font);
+  font-size:11px;
+  color:var(--t1);
+  line-height:1.55;
+  letter-spacing:1.5px;
+  /* Break anywhere so characters fill the full width */
+  word-break:break-all;
+  white-space:normal;
+  /* Padding ensures no bare edges */
+  padding:0;
+  width:100%;
+  height:100%;
+}
+
+/* Corner brackets */
+.boot-bracket{position:absolute;width:40px;height:40px;border-color:var(--b2);border-style:solid}
+.boot-bracket.tl{top:20px;left:20px;border-width:1px 0 0 1px}
+.boot-bracket.tr{top:20px;right:20px;border-width:1px 1px 0 0}
+.boot-bracket.bl{bottom:20px;left:20px;border-width:0 0 1px 1px}
+.boot-bracket.br{bottom:20px;right:20px;border-width:0 1px 1px 0}
+.boot-fs-prompt{
+  margin-top:28px;font-size:9px;letter-spacing:3px;color:var(--t3);
+  text-transform:uppercase;opacity:0;transition:opacity .5s ease;pointer-events:none
+}
+</style>
+</head>
+<body>
+
+<!-- ── BOOT OVERLAY ─────────────────────────────────── -->
+<div id="boot-overlay" onclick="bootClick()">
+  <div class="boot-bracket tl"></div>
+  <div class="boot-bracket tr"></div>
+  <div class="boot-bracket bl"></div>
+  <div class="boot-bracket br"></div>
+
+  <!-- Full-screen hex background — generates enough chars to tile the whole viewport -->
+  <div class="boot-hex"><div class="boot-hex-inner" id="boot-hex-txt"></div></div>
+
+  <div class="boot-logo">WAR<b>WATCHER</b></div>
+  <div class="boot-sub">CONFLICT INTELLIGENCE HUB</div>
+
+  <div class="boot-msg" id="boot-msg">// INTEL LOADING //<span class="boot-cursor">█</span></div>
+  <div class="boot-scanbar"><div class="boot-scanfill" id="boot-fill"></div></div>
+
+  <div id="boot-fs-prompt" class="boot-fs-prompt">
+    ▸ CLICK ANYWHERE TO ENTER FULLSCREEN
+  </div>
+</div>
+
+<header>
+  <div><div class="logo-top">WAR<b>WATCHER</b></div><div class="logo-sub" data-i18n="logo_sub">CONFLICT INTELLIGENCE HUB</div></div>
+  <div class="hdiv"></div>
+  <div class="tw"><span class="tw-label" id="tw-label">⚡ <span data-i18n="breaking">BREAKING</span></span><div class="ticker-track" id="tkr-track"><span class="ticker-a" id="tkr-a">SCANNING FEEDS…</span><span class="ticker-b" id="tkr-b"></span></div></div>
+  <div class="hdiv"></div>
+  <div class="clk">
+    <div class="clk-t" id="ct">--:--:--</div>
+    <div class="clk-d" id="cd">-- --- ----</div>
+    <div class="clk-live" data-i18n="live">LIVE</div>
+  </div>
+</header>
+
+<div class="toolbar">
+    <div class="vtog">
+      <button class="vbtn on" id="ws-tb-news" onclick="setWarMode(false)">◈ <span data-i18n="btn_intel">INTEL</span></button>
+      <button class="vbtn"    id="ws-tb-war"  onclick="setWarMode(true)">⚔ <span data-i18n="btn_strikes">STRIKES</span></button>
+    </div>
+    <span class="sep-inner"></span>
+    <div class="bar-r">
+      <!-- Language selector -->
+      <div class="lang-wrap" id="lang-wrap">
+        <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu()">
+          <span class="lang-flag" id="lang-flag">🇺🇸</span>
+          <span class="lang-code" id="lang-code">EN</span>
+          <span class="lang-arrow">▾</span>
+        </button>
+        <div class="lang-menu" id="lang-menu">
+          <button class="lang-opt active" id="lopt-en" onclick="setLang('en')"><span class="lang-flag">🇺🇸</span> ENGLISH</button>
+          <button class="lang-opt" id="lopt-fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span> FRANÇAIS</button>
+          <button class="lang-opt" id="lopt-es" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span> ESPAÑOL</button>
+          <button class="lang-opt" id="lopt-ru" onclick="setLang('ru')"><span class="lang-flag">🇷🇺</span> РУССКИЙ</button>
+          <button class="lang-opt" id="lopt-zh" onclick="setLang('zh')"><span class="lang-flag">🇨🇳</span> 中文</button>
+          <button class="lang-opt" id="lopt-fa" onclick="setLang('fa')"><span class="lang-flag">🇮🇷</span> فارسی</button>
+        </div>
+      </div>
+      <button class="rbtn" id="feed-tb-btn" onclick="toggleFeed()" style="border-color:var(--teal);color:var(--teal);text-shadow:0 0 8px rgba(0,204,224,.4);background:rgba(0,204,224,.08)">≡ <span data-i18n="btn_feed">FEED</span></button>
+      <span class="acnt" id="nxt" style="display:none;color:var(--t3)"></span>
+      <button class="rbtn" id="rbtn" onclick="loadAll()">↻ <span data-i18n="btn_refresh">REFRESH</span></button>
+      <button id="fs-btn" onclick="toggleFS()" title="Enter fullscreen (F)" style="
+        height:39px;padding:0 13px;background:var(--p3);border:1px solid var(--b2);
+        color:var(--t3);font-family:var(--font);font-size:15px;cursor:pointer;
+        transition:.14s;line-height:1;display:flex;align-items:center;justify-content:center"
+        onmouseover="this.style.color='var(--t1)';this.style.borderColor='var(--t3)'"
+        onmouseout="this.style.color='var(--t3)';this.style.borderColor='var(--b2)'">⛶</button>
+    </div>
+</div>
+<div class="prog-wrap"><div class="prog" id="prog"></div></div>
+
+<div class="main">
+
+  <!-- Sidebar: always visible on the LEFT on desktop -->
+  <aside class="side" id="side-panel">
+    <div class="side-inner">
+    <div class="sbox">
+      <div class="sbh"><div class="dot a"></div><span data-i18n="threat_index">THREAT INDEX</span></div>
+      <div class="sbb">
+        <div class="tg">
+          <div class="tc"><div class="tv" id="tv" style="color:var(--amber)">--</div><div class="tl" data-i18n="lbl_index">INDEX</div></div>
+          <div class="tc"><div class="tv" id="ac" style="color:var(--teal)">0</div><div class="tl" data-i18n="lbl_articles">ARTICLES</div></div>
+        </div>
+        <div class="ttrack"><div class="tfill" id="tb"></div></div>
+        <div class="tmarks"><span data-i18n="threat_low">LOW</span><span data-i18n="threat_mod">MOD</span><span data-i18n="threat_high">HIGH</span><span data-i18n="threat_crit">CRIT</span></div>
+        <div class="tdesc" id="td" data-i18n="threat_assessing">ASSESSING...</div>
+      </div>
+    </div>
+    <div class="sbox" style="flex:1">
+      <div class="sbh"><div class="dot g"></div><span data-i18n="source_status">SOURCE STATUS</span><span class="sbh-r" id="src-stat" style="color:var(--t3)">0/50</span></div>
+      <div class="srclist" id="slist"></div>
+    </div>
+    </div>
+  </aside>
+
+  <!-- Globe fills center -->
+  <div class="globe-panel" id="globe-panel">
+    <div class="gstats-bar" id="gstats" style="
+      position:absolute;top:10px;left:50%;transform:translateX(-50%);
+      z-index:300;display:flex;background:rgba(2,8,16,.85);
+      border:1px solid var(--b1);backdrop-filter:blur(10px);gap:0;pointer-events:none"></div>
+    <div id="globe-wrap" style="flex:1;width:100%;min-height:0;position:relative"></div>
+    <div class="gleg" id="gleg">
+      <div class="gleg-hd">// INTEL LAYER</div>
+      <div class="gleg-row"><div class="gleg-circ" style="background:var(--red)"></div>MILITARY</div>
+      <div class="gleg-row"><div class="gleg-circ" style="background:var(--blue)"></div>DIPLOMATIC</div>
+      <div class="gleg-row"><div class="gleg-circ" style="background:var(--amber)"></div>NUCLEAR</div>
+      <div class="gleg-row"><div class="gleg-circ" style="background:var(--purple)"></div>REGIONAL</div>
+      <div class="gleg-row"><div class="gleg-circ" style="background:var(--urg)"></div>URGENT</div>
+    </div>
+  </div>
+
+  <!-- Feed panel (right) -->
+  <div class="feed-panel" id="feed-panel">
+    <div class="feed-panel-hdr">
+      <span class="slbl" data-i18n="feed_title">// INTELLIGENCE FEED</span>
+      <span id="cnt" style="font-size:9px;color:var(--t3);letter-spacing:1px;margin-right:auto">-- ART</span>
+    </div>
+    <div class="feed-filters" id="feed-filters">
+      <button class="ff-btn on" id="ff-all"   onclick="feedFilter('all',this)">◈ <span data-i18n="ff_all">ALL</span></button>
+      <button class="ff-btn"    id="ff-mil"   onclick="feedFilter('mil',this)">⚔ <span data-i18n="ff_mil">MIL</span></button>
+      <button class="ff-btn"    id="ff-dip"   onclick="feedFilter('dip',this)">◎ <span data-i18n="ff_dip">DIP</span></button>
+      <button class="ff-btn"    id="ff-nuc"   onclick="feedFilter('nuc',this)">☢ <span data-i18n="ff_nuc">NUC</span></button>
+      <button class="ff-btn"    id="ff-reg"   onclick="feedFilter('reg',this)">⊕ <span data-i18n="ff_reg">REG</span></button>
+      <button class="ff-btn"    id="ff-urg"   onclick="feedFilter('urg',this)">⚡ <span data-i18n="ff_urg">URG</span></button>
+      <span class="ff-sep"></span>
+      <button class="ff-btn" id="ff-sort-time"   onclick="feedSort('time',this)">🕐 <span data-i18n="ff_recent">RECENT</span></button>
+      <button class="ff-btn" id="ff-sort-imp"    onclick="feedSort('imp',this)">↑ <span data-i18n="ff_importance">IMPORTANCE</span></button>
+    </div>
+    <div class="feed-panel-body">
+      <div class="grid" id="grid"><div class="ld"><div class="sp"></div><span>INITIALIZING...</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Globe hover tooltip -->
+<div id="globe-tip" style="display:none;position:fixed;z-index:9000;
+  background:rgba(2,8,16,.97);border:1px solid #1e3858;border-left:3px solid currentColor;
+  padding:8px 12px;font-family:'Courier New',monospace;max-width:260px;
+  pointer-events:none;backdrop-filter:blur(8px)">
+  <div id="globe-tip-badge" style="font-size:7px;letter-spacing:2px;margin-bottom:4px;opacity:.8"></div>
+  <div id="globe-tip-title" style="font-size:11.5px;color:#c0d8f0;line-height:1.4;margin-bottom:3px"></div>
+  <div id="globe-tip-meta"  style="font-size:9px;color:#385878"></div>
+</div>
+
+<!-- Mobile tap info bar -->
+<div id="mob-tap-bar" style="display:none;position:fixed;bottom:56px;left:0;right:0;z-index:8500;
+  background:rgba(4,13,28,.97);border-top:1px solid var(--b1);padding:10px 14px;
+  font-family:'Courier New',monospace;backdrop-filter:blur(10px)">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+    <div style="flex:1">
+      <div id="mob-tap-cat" style="font-size:8px;letter-spacing:2px;border:1px solid currentColor;
+        display:inline-block;padding:1px 5px;margin-bottom:5px">INFO</div>
+      <div id="mob-tap-title" style="font-size:12px;color:#c2d8f0;line-height:1.4;margin-bottom:3px"></div>
+      <div id="mob-tap-src" style="font-size:9px;color:var(--t3)"></div>
+    </div>
+    <button onclick="document.getElementById('mob-tap-bar').style.display='none'"
+      style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:0;flex-shrink:0">✕</button>
+  </div>
+  <a id="mob-tap-link" href="#" target="_blank" rel="noopener"
+    style="display:block;margin-top:8px;color:var(--teal);font-size:9px;letter-spacing:1px;text-decoration:none;
+    border:1px solid var(--teal);padding:6px 12px;text-align:center">
+    ▸ OPEN FULL ARTICLE
+  </a>
+</div>
+
+<div class="side-overlay" id="side-overlay" onclick="closeSidebar()"></div>
+
+<nav class="bnav" id="bnav">
+  <button class="bnav-btn on" id="bn-globe" onclick="mobileNav('globe')">
+    <span class="bnav-ic">⊕</span><span>GLOBE</span>
+  </button>
+  <button class="bnav-btn" id="bn-strikes" onclick="mobileNav('strikes')">
+    <span class="bnav-ic">⚔</span><span>STRIKES</span>
+  </button>
+  <button class="bnav-btn" id="bn-feed" onclick="mobileNav('feed')">
+    <span class="bnav-ic">≡</span><span>FEED</span>
+  </button>
+  <button class="bnav-btn" id="bn-status" onclick="mobileNav('status')">
+    <span class="bnav-ic">◈</span><span>STATUS</span>
+  </button>
+</nav>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// WARWATCHER ENGINE v5
+// ═══════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════
+// WARWATCHER CLIENT  v6  —  API-driven
+// All feed fetching, parsing, categorisation, geo-tagging and
+// deduplication now happen server-side in /.netlify/functions/feeds
+// ═══════════════════════════════════════════════════════════════════
+
+// Source list (display only — not fetched client-side)
+const FEED_NAMES = [
+  {n:'BBC Middle East',    t:'gen'},{n:'BBC World',         t:'gen'},{n:'Al Jazeera',        t:'gen'},
+  {n:'Reuters World',      t:'gen'},{n:'France 24',         t:'gen'},{n:'Deutsche Welle',    t:'gen'},
+  {n:'Sky News World',     t:'gen'},{n:'NPR World',         t:'gen'},{n:'AP News',           t:'gen'},
+  {n:'The Guardian World', t:'gen'},{n:'Times of Israel',   t:'gen'},{n:'Jerusalem Post',    t:'gen'},
+  {n:'i24 News',           t:'gen'},{n:'i24 Breaking',      t:'gen'},{n:'Haaretz',           t:'gen'},
+  {n:'Ynet News',          t:'gen'},{n:'Al-Monitor',        t:'reg'},{n:'Middle East Eye',   t:'reg'},
+  {n:'Arab News',          t:'reg'},{n:'Anadolu Agency',    t:'reg'},{n:'Rudaw',             t:'reg'},
+  {n:'The Cradle',         t:'reg'},{n:'The New Arab',      t:'reg'},{n:'Al Arabiya',        t:'reg'},
+  {n:'Iran International', t:'reg'},{n:'The Guardian ME',   t:'gen'},{n:'Foreign Policy',    t:'reg'},
+  {n:'Antiwar.com',        t:'reg'},{n:'Defense One',       t:'mil'},{n:'Breaking Defense',  t:'mil'},
+  {n:'The War Zone',       t:'mil'},{n:'War on the Rocks',  t:'mil'},{n:'Defense News',      t:'mil'},
+  {n:'Task & Purpose',     t:'mil'},{n:'ISW Analysis',      t:'mil'},{n:'Bellingcat',        t:'mil'},
+  {n:'USNI News',          t:'mil'},{n:'Kyiv Independent',  t:'mil'},{n:'Ukrinform',         t:'mil'},
+  {n:'RUSI',               t:'mil'},{n:'Crisis Group',      t:'reg'},{n:'Meduza EN',         t:'reg'},
+  {n:'Arms Control Assoc', t:'nuc'},{n:'Bulletin At. Sci.', t:'nuc'},{n:'Arms Control Wonk', t:'nuc'},
+  {n:'38 North',           t:'nuc'},{n:'NTI Nuclear',       t:'nuc'},{n:'SIPRI',             t:'nuc'},
+  {n:'MEE Investigations', t:'reg'},{n:'UN News Security',  t:'reg'},
+];
+
+const API_URL = '/.netlify/functions/feeds';
+
+const state = {
+  news:[], filter:'all', seen:new Set(),
+  status: FEED_NAMES.map(f => ({ f, s:'pend' })),
+  feedOpen:false, warMode:false, globe:null
+};
+// ── i18n ENGINE ──────────────────────────────────────────────────────
+let _lang = 'en';
+
+const LANGS = {
+  en:{
+    code:'EN', flag:'🇺🇸',
+    logo_sub:'CONFLICT INTELLIGENCE HUB', live:'LIVE', breaking:'BREAKING',
+    btn_intel:'INTEL', btn_strikes:'STRIKES', btn_feed:'FEED', btn_refresh:'REFRESH',
+    feed_title:'// INTELLIGENCE FEED',
+    ff_all:'ALL', ff_mil:'MIL', ff_dip:'DIP', ff_nuc:'NUC', ff_reg:'REG', ff_urg:'URG',
+    ff_recent:'RECENT', ff_importance:'IMPORTANCE',
+    threat_index:'THREAT INDEX', lbl_index:'INDEX', lbl_articles:'ARTICLES',
+    threat_low:'LOW', threat_mod:'MOD', threat_high:'HIGH', threat_crit:'CRIT',
+    threat_assessing:'ASSESSING...',
+    source_status:'SOURCE STATUS',
+    cat_mil:'MILITARY', cat_dip:'DIPLOMATIC', cat_nuc:'NUCLEAR', cat_reg:'REGIONAL', cat_urg:'URGENT',
+    intel_layer:'// INTEL LAYER', strike_layer:'// STRIKE LAYER',
+    lbl_events:'EVENTS', lbl_trajectories:'TRAJECTORIES', lbl_critical:'CRITICAL',
+    lbl_strike:'STRIKE', lbl_event:'EVENT', lbl_mapped:'MAPPED',
+    ring_recency:'RING PULSE = RECENCY', arc_trajectory:'ARC = TRAJECTORY', faded_old:'FADED = >24H OLD',
+    threat_d_critical:'CRITICAL — ACTIVE ESCALATION', threat_d_high:'HIGH — SIGNIFICANT TENSIONS',
+    threat_d_elevated:'ELEVATED — REGIONAL VOLATILITY', threat_d_moderate:'MODERATE — MONITORED',
+    just_now:'JUST NOW', m_ago:'M AGO', h_ago:'H AGO', d_ago:'D AGO',
+    scanning:'SCANNING', sources:'SOURCES', art:'ART', initializing:'INITIALIZING...',
+    no_intel:'NO INTEL FOR CURRENT FILTER', all_failed:'ALL SOURCES FAILED — CHECK YOUR INTERNET CONNECTION',
+  },
+  fr:{
+    code:'FR', flag:'🇫🇷',
+    logo_sub:'CENTRE DE RENSEIGNEMENT', live:'EN DIRECT', breaking:'URGENT',
+    btn_intel:'INTEL', btn_strikes:'FRAPPES', btn_feed:'FLUX', btn_refresh:'ACTUALISER',
+    feed_title:'// FLUX DE RENSEIGNEMENT',
+    ff_all:'TOUT', ff_mil:'MIL', ff_dip:'DIP', ff_nuc:'NUC', ff_reg:'RÉG', ff_urg:'URG',
+    ff_recent:'RÉCENT', ff_importance:'IMPORTANCE',
+    threat_index:'INDICE DE MENACE', lbl_index:'INDICE', lbl_articles:'ARTICLES',
+    threat_low:'BAS', threat_mod:'MOY', threat_high:'ÉLEVÉ', threat_crit:'CRIT',
+    threat_assessing:'ÉVALUATION...',
+    source_status:'ÉTAT DES SOURCES',
+    cat_mil:'MILITAIRE', cat_dip:'DIPLOMATIQUE', cat_nuc:'NUCLÉAIRE', cat_reg:'RÉGIONAL', cat_urg:'URGENT',
+    intel_layer:'// COUCHE INTEL', strike_layer:'// COUCHE FRAPPE',
+    lbl_events:'ÉVÉNEMENTS', lbl_trajectories:'TRAJECTOIRES', lbl_critical:'CRITIQUE',
+    lbl_strike:'FRAPPE', lbl_event:'ÉVÉNEMENT', lbl_mapped:'CARTOGRAPHIÉ',
+    ring_recency:'ANNEAU = RÉCENCE', arc_trajectory:'ARC = TRAJECTOIRE', faded_old:'ESTOMPÉ = >24H',
+    threat_d_critical:'CRITIQUE — ESCALADE ACTIVE', threat_d_high:'ÉLEVÉ — TENSIONS SIGNIFICATIVES',
+    threat_d_elevated:'ÉLEVÉ — VOLATILITÉ RÉGIONALE', threat_d_moderate:'MODÉRÉ — SURVEILLÉ',
+    just_now:'À L\'INSTANT', m_ago:'MIN', h_ago:'H', d_ago:'J',
+    scanning:'ANALYSE DE', sources:'SOURCES', art:'ART', initializing:'INITIALISATION...',
+    no_intel:'AUCUN RÉSULTAT POUR CE FILTRE', all_failed:'TOUTES LES SOURCES ONT ÉCHOUÉ',
+  },
+  es:{
+    code:'ES', flag:'🇪🇸',
+    logo_sub:'CENTRO DE INTELIGENCIA', live:'EN VIVO', breaking:'URGENTE',
+    btn_intel:'INTEL', btn_strikes:'ATAQUES', btn_feed:'NOTICIAS', btn_refresh:'ACTUALIZAR',
+    feed_title:'// FLUJO DE INTELIGENCIA',
+    ff_all:'TODO', ff_mil:'MIL', ff_dip:'DIP', ff_nuc:'NUC', ff_reg:'REG', ff_urg:'URG',
+    ff_recent:'RECIENTE', ff_importance:'IMPORTANCIA',
+    threat_index:'ÍNDICE DE AMENAZA', lbl_index:'ÍNDICE', lbl_articles:'ARTÍCULOS',
+    threat_low:'BAJO', threat_mod:'MED', threat_high:'ALTO', threat_crit:'CRIT',
+    threat_assessing:'EVALUANDO...',
+    source_status:'ESTADO DE FUENTES',
+    cat_mil:'MILITAR', cat_dip:'DIPLOMÁTICO', cat_nuc:'NUCLEAR', cat_reg:'REGIONAL', cat_urg:'URGENTE',
+    intel_layer:'// CAPA INTEL', strike_layer:'// CAPA DE ATAQUES',
+    lbl_events:'EVENTOS', lbl_trajectories:'TRAYECTORIAS', lbl_critical:'CRÍTICO',
+    lbl_strike:'ATAQUE', lbl_event:'EVENTO', lbl_mapped:'MAPEADO',
+    ring_recency:'ANILLO = VIGENCIA', arc_trajectory:'ARCO = TRAYECTORIA', faded_old:'DESVANECIDO = >24H',
+    threat_d_critical:'CRÍTICO — ESCALADA ACTIVA', threat_d_high:'ALTO — TENSIONES SIGNIFICATIVAS',
+    threat_d_elevated:'ELEVADO — VOLATILIDAD REGIONAL', threat_d_moderate:'MODERADO — MONITOREADO',
+    just_now:'AHORA', m_ago:'MIN', h_ago:'H', d_ago:'D',
+    scanning:'ANALIZANDO', sources:'FUENTES', art:'ART', initializing:'INICIANDO...',
+    no_intel:'SIN RESULTADOS PARA ESTE FILTRO', all_failed:'TODAS LAS FUENTES FALLARON',
+  },
+  ru:{
+    code:'RU', flag:'🇷🇺',
+    logo_sub:'ЦЕНТР РАЗВЕДКИ', live:'ПРЯМОЙ ЭФИР', breaking:'СРОЧНО',
+    btn_intel:'РАЗВЕДКА', btn_strikes:'УДАРЫ', btn_feed:'ЛЕНТА', btn_refresh:'ОБНОВИТЬ',
+    feed_title:'// ЛЕНТА РАЗВЕДКИ',
+    ff_all:'ВСЕ', ff_mil:'ВОЕ', ff_dip:'ДИП', ff_nuc:'ЯДЕ', ff_reg:'РЕГ', ff_urg:'СРЧ',
+    ff_recent:'СВЕЖЕЕ', ff_importance:'ВАЖНОСТЬ',
+    threat_index:'ИНДЕКС УГРОЗЫ', lbl_index:'ИНДЕКС', lbl_articles:'СТАТЕЙ',
+    threat_low:'НИЗ', threat_mod:'СРД', threat_high:'ВЫС', threat_crit:'КРИТ',
+    threat_assessing:'ОЦЕНКА...',
+    source_status:'СТАТУС ИСТОЧНИКОВ',
+    cat_mil:'ВОЕННОЕ', cat_dip:'ДИПЛОМАТИЯ', cat_nuc:'ЯДЕРНОЕ', cat_reg:'РЕГИОНАЛЬНОЕ', cat_urg:'СРОЧНО',
+    intel_layer:'// СЛОЙ РАЗВЕДКИ', strike_layer:'// СЛОЙ УДАРОВ',
+    lbl_events:'СОБЫТИЯ', lbl_trajectories:'ТРАЕКТОРИИ', lbl_critical:'КРИТИЧНО',
+    lbl_strike:'УДАР', lbl_event:'СОБЫТИЕ', lbl_mapped:'НАНЕСЕНО',
+    ring_recency:'КОЛЬЦО = СВЕЖЕСТЬ', arc_trajectory:'ДУГА = ТРАЕКТОРИЯ', faded_old:'ТУСКЛО = >24Ч',
+    threat_d_critical:'КРИТИЧНО — АКТИВНАЯ ЭСКАЛАЦИЯ', threat_d_high:'ВЫСОКОЕ — ЗНАЧИМАЯ НАПРЯЖЁННОСТЬ',
+    threat_d_elevated:'ПОВЫШЕННОЕ — РЕГИОНАЛЬНАЯ НЕСТАБИЛЬНОСТЬ', threat_d_moderate:'УМЕРЕННОЕ — МОНИТОРИНГ',
+    just_now:'ТОЛЬКО ЧТО', m_ago:'МИН', h_ago:'Ч', d_ago:'Д',
+    scanning:'СКАНИРОВАНИЕ', sources:'ИСТОЧНИКОВ', art:'СТ', initializing:'ИНИЦИАЛИЗАЦИЯ...',
+    no_intel:'НЕТ ДАННЫХ ДЛЯ ФИЛЬТРА', all_failed:'ВСЕ ИСТОЧНИКИ НЕДОСТУПНЫ',
+  },
+  zh:{
+    code:'ZH', flag:'🇨🇳',
+    logo_sub:'冲突情报中心', live:'直播', breaking:'突发',
+    btn_intel:'情报', btn_strikes:'打击', btn_feed:'资讯', btn_refresh:'刷新',
+    feed_title:'// 情报资讯',
+    ff_all:'全部', ff_mil:'军事', ff_dip:'外交', ff_nuc:'核武', ff_reg:'地区', ff_urg:'紧急',
+    ff_recent:'最新', ff_importance:'重要性',
+    threat_index:'威胁指数', lbl_index:'指数', lbl_articles:'文章',
+    threat_low:'低', threat_mod:'中', threat_high:'高', threat_crit:'危',
+    threat_assessing:'评估中...',
+    source_status:'信源状态',
+    cat_mil:'军事', cat_dip:'外交', cat_nuc:'核武', cat_reg:'地区', cat_urg:'紧急',
+    intel_layer:'// 情报层', strike_layer:'// 打击层',
+    lbl_events:'事件', lbl_trajectories:'轨迹', lbl_critical:'危急',
+    lbl_strike:'打击', lbl_event:'事件', lbl_mapped:'已标注',
+    ring_recency:'圆环 = 时效', arc_trajectory:'弧线 = 轨迹', faded_old:'褪色 = >24小时',
+    threat_d_critical:'危急 — 主动升级', threat_d_high:'高危 — 严重紧张',
+    threat_d_elevated:'升高 — 地区动荡', threat_d_moderate:'温和 — 持续监控',
+    just_now:'刚刚', m_ago:'分钟前', h_ago:'小时前', d_ago:'天前',
+    scanning:'扫描', sources:'来源', art:'篇', initializing:'初始化...',
+    no_intel:'当前筛选无结果', all_failed:'所有来源加载失败',
+  },
+  fa:{
+    code:'FA', flag:'🇮🇷', rtl:true,
+    logo_sub:'مرکز اطلاعات تعارضات', live:'زنده', breaking:'خبر فوری',
+    btn_intel:'اطلاعات', btn_strikes:'حملات', btn_feed:'خوراک', btn_refresh:'بروزرسانی',
+    feed_title:'// خوراک اطلاعاتی',
+    ff_all:'همه', ff_mil:'نظامی', ff_dip:'دیپلماسی', ff_nuc:'هسته‌ای', ff_reg:'منطقه', ff_urg:'فوری',
+    ff_recent:'اخیر', ff_importance:'اهمیت',
+    threat_index:'شاخص تهدید', lbl_index:'شاخص', lbl_articles:'مقالات',
+    threat_low:'پایین', threat_mod:'متوسط', threat_high:'بالا', threat_crit:'بحرانی',
+    threat_assessing:'ارزیابی...',
+    source_status:'وضعیت منابع',
+    cat_mil:'نظامی', cat_dip:'دیپلماتیک', cat_nuc:'هسته‌ای', cat_reg:'منطقه‌ای', cat_urg:'فوری',
+    intel_layer:'// لایه اطلاعاتی', strike_layer:'// لایه حملات',
+    lbl_events:'رویدادها', lbl_trajectories:'مسیرها', lbl_critical:'بحرانی',
+    lbl_strike:'حمله', lbl_event:'رویداد', lbl_mapped:'نقشه‌برداری',
+    ring_recency:'حلقه = تازگی', arc_trajectory:'قوس = مسیر', faded_old:'محو = >۲۴ ساعت',
+    threat_d_critical:'بحرانی — تشدید فعال', threat_d_high:'بالا — تنش‌های قابل توجه',
+    threat_d_elevated:'بالا — بی‌ثباتی منطقه‌ای', threat_d_moderate:'متوسط — تحت نظر',
+    just_now:'همین الان', m_ago:'دقیقه پیش', h_ago:'ساعت پیش', d_ago:'روز پیش',
+    scanning:'اسکن', sources:'منبع', art:'مقاله', initializing:'راه‌اندازی...',
+    no_intel:'نتیجه‌ای برای این فیلتر نیست', all_failed:'همه منابع ناموفق بودند',
+  }
+};
+
+function t(key){ return (LANGS[_lang]||LANGS.en)[key] || (LANGS.en[key]||key); }
+
+function setLang(code){
+  _lang = code;
+  const L = LANGS[code] || LANGS.en;
+
+  // Update lang button display
+  document.getElementById('lang-flag').textContent = L.flag;
+  document.getElementById('lang-code').textContent = L.code;
+
+  // Highlight active option
+  document.querySelectorAll('.lang-opt').forEach(b=>{
+    b.classList.toggle('active', b.id==='lopt-'+code);
+  });
+
+  // Close menu
+  document.getElementById('lang-menu').classList.remove('open');
+  document.getElementById('lang-btn').classList.remove('open');
+
+  // RTL support for Persian
+  const isRTL = !!L.rtl;
+  document.documentElement.setAttribute('lang', code);
+  document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+  document.getElementById('side-panel').style.direction = isRTL ? 'rtl' : '';
+  document.getElementById('feed-panel').style.direction = isRTL ? 'rtl' : '';
+
+  // Apply all data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if(val) el.textContent = val;
+  });
+
+  // Re-render dynamic sections that use translated strings
+  if(state.news.length){
+    renderFeedFiltered();
+    setThreat(state.news);
+  }
+  if(state.globe) refreshGlobe();
+
+  // Store preference
+  try{ localStorage.setItem('ww_lang', code); }catch(_){}
+}
+
+function toggleLangMenu(){
+  const menu = document.getElementById('lang-menu');
+  const btn  = document.getElementById('lang-btn');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+// Close lang menu when clicking outside
+document.addEventListener('click', e=>{
+  const wrap = document.getElementById('lang-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    document.getElementById('lang-menu').classList.remove('open');
+    document.getElementById('lang-btn').classList.remove('open');
+  }
+});
+
+const GEO=[
+  {k:['tel aviv'],c:[32.08,34.78,.09]},{k:['jerusalem'],c:[31.77,35.23,.07]},
+  {k:['haifa'],c:[32.82,35.00,.07]},{k:['ashkelon','ashdod'],c:[31.82,34.65,.08]},
+  {k:['beersheba','negev'],c:[31.25,34.79,.10]},{k:['golan'],c:[33.10,35.80,.10]},
+  {k:['netanya','herzliya'],c:[32.28,34.85,.08]},
+  {k:['gaza','rafah','khan younis','jabalia','deir al-balah'],c:[31.50,34.47,.13]},
+  {k:['west bank','ramallah','nablus','jenin','hebron','tulkarm'],c:[31.90,35.20,.16]},
+  {k:['beirut'],c:[33.89,35.50,.07]},{k:['south lebanon','litani','tyre','sidon','nabatieh'],c:[33.27,35.28,.13]},
+  {k:['damascus'],c:[33.51,36.29,.08]},{k:['aleppo'],c:[36.20,37.16,.09]},
+  {k:['idlib'],c:[35.93,36.63,.09]},{k:['deir ez-zor'],c:[35.33,40.14,.09]},
+  {k:['homs'],c:[34.73,36.72,.07]},
+  {k:['tehran'],c:[35.69,51.39,.11]},{k:['isfahan','natanz'],c:[32.65,51.67,.13]},
+  {k:['bushehr'],c:[28.97,50.84,.07]},{k:['fordow'],c:[34.88,50.57,.07]},
+  {k:['arak'],c:[34.09,49.69,.07]},{k:['tabriz'],c:[38.08,46.30,.07]},
+  {k:['baghdad'],c:[33.34,44.40,.11]},{k:['mosul'],c:[36.34,43.13,.08]},
+  {k:['erbil'],c:[36.19,44.01,.07]},{k:['basra'],c:[30.51,47.78,.08]},
+  {k:["sana'a",'sanaa'],c:[15.35,44.21,.09]},{k:['aden'],c:[12.78,45.03,.07]},
+  {k:['hudaydah','hodeida'],c:[14.80,43.00,.07]},{k:['marib'],c:[15.47,45.32,.07]},
+  {k:['red sea','bab al-mandab'],c:[14.00,43.50,.40]},
+  {k:['strait of hormuz'],c:[26.56,56.55,.12]},
+  {k:['persian gulf','gulf of oman'],c:[26.00,54.00,.55]},
+  {k:['amman'],c:[31.95,35.93,.09]},{k:['cairo','egypt'],c:[30.04,31.24,.14]},
+  {k:['sinai'],c:[29.50,34.00,.20]},{k:['riyadh','saudi'],c:[24.69,46.72,.16]},
+  {k:['dubai','abu dhabi','uae'],c:[24.80,54.80,.18]},{k:['doha','qatar'],c:[25.28,51.53,.08]},
+  {k:['ankara','turkey'],c:[39.93,32.86,.14]},{k:['istanbul'],c:[41.01,28.96,.10]},
+  {k:['kyiv','kiev'],c:[50.45,30.52,.11]},{k:['kharkiv'],c:[49.99,36.23,.09]},
+  {k:['kherson'],c:[46.64,32.62,.07]},{k:['zaporizhzhia'],c:[47.84,35.13,.09]},
+  {k:['bakhmut','avdiivka'],c:[48.60,37.97,.12]},
+  {k:['crimea','sevastopol'],c:[44.95,34.10,.14]},
+  {k:['donbas','donetsk','luhansk'],c:[48.00,38.50,.22]},
+  {k:['moscow'],c:[55.75,37.62,.11]},{k:['kabul'],c:[34.53,69.17,.10]},
+  {k:['islamabad','pakistan'],c:[33.72,73.04,.14]},
+  {k:['middle east'],c:[29.00,40.00,2.5]},
+  {k:['houthi','ansarallah'],c:[15.00,44.00,.35]},
+  {k:['hezbollah'],c:[33.50,35.55,.22]},{k:['hamas'],c:[31.50,34.45,.18]},
+  {k:['irgc','iranian'],c:[35.00,51.00,1.2]},
+  {k:['russia','russian'],c:[57.00,44.00,2.0]},
+  {k:['ukraine','ukrainian'],c:[49.00,32.00,.90]},
+];
+
+const ACTORS=[
+  {kw:['irgc','iran launched','iranian missile','iranian drone','iran fired','iran attack','iran strike','iran bomb'],pos:[35.69,51.39]},
+  {kw:['houthi','ansarallah','yemeni strike','yemeni missile','yemeni drone','yemen launched','yemen fired'],pos:[15.35,44.21]},
+  {kw:['hamas','islamic jihad','al-qassam','qassam','hamas launch','hamas fire','hamas attack'],pos:[31.52,34.45]},
+  {kw:['hezbollah','nasrallah','hezbollah launch','hezbollah fire','hezbollah attack','south lebanon attack'],pos:[33.45,35.55]},
+  {kw:['idf','israeli air','israel strikes','israel bombed','israel attack','israel launch','israel fired','israeli forces','israeli military'],pos:[32.08,34.78]},
+  {kw:['russia launch','russian missile','russian airstrike','russia strike','russian strike','russia bomb','russian bomb','russian attack','russia attack','kremlin strike'],pos:[55.75,37.62]},
+  {kw:['ukraine launch','ukrainian missile','ukrainian drone','ukraine strike','ukrainian strike','ukraine attack','ukrainian attack','ukraine bomb'],pos:[50.45,30.52]},
+  {kw:['us airstrike','us strike','american strike','us military strike','coalition airstrike','pentagon strike','us bombed','american military'],pos:[38.90,-77.00]},
+  {kw:['syrian forces','syrian army','damascus strike','syrian government'],pos:[33.51,36.29]},
+  {kw:['iraqi forces','pmu','hashd','popular mobilization','iraqi military'],pos:[33.34,44.40]},
+  {kw:['saudi strike','saudi airstrike','saudi military','saudi-led','saudi forces'],pos:[24.69,46.72]},
+];
+
+const ATTACKER_BY_TARGET={
+  'gaza':[32.08,34.78],'rafah':[32.08,34.78],'west bank':[32.08,34.78],
+  'beirut':[32.08,34.78],'south lebanon':[32.08,34.78],
+  'israel':[31.52,34.45],'tel aviv':[15.35,44.21],
+  'kyiv':[55.75,37.62],'kharkiv':[55.75,37.62],'ukraine':[55.75,37.62],
+  'moscow':[50.45,30.52],'red sea':[15.35,44.21],'hormuz':[35.69,51.39],
+};
+
+const URGENT_RX = /\bbreaking\b|breaking news|urgent|just in|alert:|developing:|flash:|immediate|evacuat|emergency|mass casual|massacre|civilians killed|dozens killed|nuclear alert|imminent|missile launched|air raid|red alert|sirens/i;
+const WAR_RX    = /airstrike|air strike|missile|rocket|bomb|bombing|explosion|drone strike|artillery|shelling|struck|kill|killed|dead|casualties|ground operation|incursion|assault|naval strike|torpedo|intercept|iron dome|ballistic|barrage|launched|fired|warship/i;
+const CAT_COL   = {mil:'#ff2038',dip:'#3a80ff',nuc:'#ff9000',reg:'#9040ff',urg:'#ffe030'};
+
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function ago(d){
+  const m=Math.round((Date.now()-new Date(d))/60000);
+  if(m<2) return t('just_now');
+  if(m<60) return m+' '+t('m_ago');
+  const h=Math.round(m/60); if(h<24) return h+' '+t('h_ago');
+  return Math.round(h/24)+' '+t('d_ago');
+}
+const catLbl = c=>({mil:t('cat_mil'),dip:t('cat_dip'),nuc:t('cat_nuc'),reg:t('cat_reg'),urg:t('cat_urg')}[c]||t('cat_reg'));
+function detectOrigin(txt,geoTarget){const c=txt.toLowerCase();for(const a of ACTORS)if(a.kw.some(k=>c.includes(k)))return a.pos;if(geoTarget){for(const[key,pos]of Object.entries(ATTACKER_BY_TARGET)){if(c.includes(key))return pos;}}return null;}
+function warLevel(c){if(/killed|dead|casualties|airstrike|bombing|explosion|blast/.test(c))return 3;if(/missile|rocket|drone strike|artillery|shelling/.test(c))return 2;return 1;}
+
+function dedup(arr){const seen=new Set();return arr.filter(a=>{const k=a.title.slice(0,55);if(seen.has(k))return false;seen.add(k);return true;}).sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));}
+
+// ══════════════════════════════════════════════════════════════
+// CLIENT-SIDE FALLBACK ENGINE
+// Used when /.netlify/functions/feeds is unavailable.
+// Fetches RSS via CORS proxies, parses XML, categorises.
+// ══════════════════════════════════════════════════════════════
+
+// ── XML Parser (zero-dep) ────────────────────────────────────
+const HTML_ENT={'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&#x27;':"'",'&apos;':"'",'&nbsp;':' '};
+const decodeEnt=s=>s.replace(/&[^;]+;/g,m=>HTML_ENT[m]||m);
+function extractTag(b,tags){
+  for(const tag of tags){
+    const cd=b.match(new RegExp('<'+tag+'[^>]*><!\[CDATA\[([\s\S]*?)\]\]></'+tag+'>','i'));
+    if(cd?.[1]?.trim())return cd[1].trim();
+    const pl=b.match(new RegExp('<'+tag+'[^>]*>([\s\S]*?)</'+tag+'>','i'));
+    if(pl?.[1]){const clean=decodeEnt(pl[1].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim());if(clean)return clean;}
+    if(tag==='link'){const lh=b.match(/<link[^>]+href=["']([^"']+)["'][^>]*\/?>/i);if(lh?.[1])return lh[1].trim();}
+  }
+  return '';
+}
+function parseRSS(xml){
+  xml=xml.replace(/<!--[\s\S]*?-->/g,'').replace(/<\?[\s\S]*?\?>/g,'');
+  const items=[],rx=/<(?:item|entry)[\s>]([\s\S]*?)<\/(?:item|entry)>/gi;
+  let m;
+  while((m=rx.exec(xml))!==null){
+    const b=m[1];
+    const title=extractTag(b,['title']),url=extractTag(b,['link','id','guid']);
+    const summary=extractTag(b,['description','summary','content:encoded','content']);
+    const pubDate=extractTag(b,['pubDate','published','updated','dc:date']);
+    if(!title||title.length<4)continue;
+    items.push({title:title.slice(0,220),url:(url.startsWith('http')?url:'')||'#',
+      summary:summary.replace(/\s+/g,' ').slice(0,300),pubDate:pubDate.trim()});
+  }
+  return items;
+}
+
+// ── NLP ─────────────────────────────────────────────────────
+const NUC_RX=/nuclear|uranium|enrichment|centrifuge|iaea|warhead|plutonium|fordow|natanz|arak|radiological|fissile|breakout/i;
+const DIP_RX=/diplomat|negotiat|ceasefire|sanction|united nations|treaty|talks|deal|summit|envoy|foreign minister|resolution/i;
+const MIL_RX=/strike|attack|idf|troops|missile|rocket|ballistic|soldier|kill|airstrike|military|combat|tank|navy|bomb|drone|explosion|casualties|artillery|shelling|barrage|intercept|iron dome|warship|naval|commando|siege|raid|mortar/i;
+const KEYWORDS_FB=new Set(['iran','israel','idf','hamas','hezbollah','gaza','beirut','tehran','middle east','irgc','houthi','ansarallah','yemen','missile','rocket','ballistic','drone','iron dome','nuclear','uranium','enrichment','iaea','strike','attack','bomb','troops','killed','casualties','military','syria','iraq','lebanon','ukraine','russia','nato','war','ceasefire']);
+function catOf_fb(txt){const t=(txt||'').toLowerCase();if(URGENT_RX.test(t))return'urg';if(NUC_RX.test(t))return'nuc';if(DIP_RX.test(t))return'dip';if(MIL_RX.test(t))return'mil';return'reg';}
+function isRelevant_fb(open,txt){if(open)return true;const l=txt.toLowerCase();for(const k of KEYWORDS_FB)if(l.includes(k))return true;return URGENT_RX.test(txt);}
+function geoFor_fb(txt){
+  const t=txt.toLowerCase();
+  for(const g of GEO_FB){for(const k of g.k){if(t.includes(k)){const[la,ln,r]=g.c;return[+(la+(Math.random()-.5)*r*3).toFixed(4),+(ln+(Math.random()-.5)*r*3).toFixed(4)];}}}
+  return null;
+}
+
+// Minimal geo table for client fallback
+const GEO_FB=[
+  {k:['tel aviv'],c:[32.08,34.78,.09]},{k:['jerusalem'],c:[31.77,35.23,.07]},
+  {k:['gaza','rafah','khan younis','jabalia'],c:[31.50,34.47,.13]},{k:['west bank','ramallah','nablus','jenin'],c:[31.90,35.20,.16]},
+  {k:['beirut'],c:[33.89,35.50,.07]},{k:['south lebanon'],c:[33.27,35.28,.13]},
+  {k:['damascus'],c:[33.51,36.29,.08]},{k:['tehran'],c:[35.69,51.39,.11]},
+  {k:['baghdad'],c:[33.34,44.40,.11]},{k:["sana'a",'sanaa'],c:[15.35,44.21,.09]},
+  {k:['red sea'],c:[14.00,43.50,.40]},{k:['kyiv','kiev'],c:[50.45,30.52,.11]},
+  {k:['moscow'],c:[55.75,37.62,.11]},{k:['houthi','ansarallah'],c:[15.00,44.00,.35]},
+  {k:['hezbollah'],c:[33.50,35.55,.22]},{k:['hamas'],c:[31.50,34.45,.18]},
+  {k:['ukraine','ukrainian'],c:[49.00,32.00,.90]},{k:['russia','russian'],c:[57.00,44.00,2.0]},
+  {k:['middle east'],c:[29.00,40.00,2.5]},{k:['aleppo'],c:[36.20,37.16,.09]},
+  {k:['riyadh','saudi'],c:[24.69,46.72,.16]},{k:['istanbul'],c:[41.01,28.96,.10]},
+  {k:['ankara','turkey'],c:[39.93,32.86,.14]},{k:['doha','qatar'],c:[25.28,51.53,.08]},
+  {k:['donbas','donetsk','luhansk'],c:[48.00,38.50,.22]},{k:['kharkiv'],c:[49.99,36.23,.09]},
+];
+
+// ── Client-side CORS proxy fetcher ───────────────────────────
+const FALLBACK_FEEDS=[
+  {n:'BBC Middle East',u:'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml',t:'gen'},
+  {n:'Al Jazeera',u:'https://www.aljazeera.com/xml/rss/all.xml',t:'gen'},
+  {n:'Times of Israel',u:'https://www.timesofisrael.com/feed/',t:'gen',open:true},
+  {n:'Middle East Eye',u:'https://www.middleeasteye.net/rss',t:'reg',open:true},
+  {n:'Al-Monitor',u:'https://www.al-monitor.com/rss',t:'reg',open:true},
+  {n:'Reuters World',u:'https://feeds.reuters.com/reuters/worldNews',t:'gen'},
+  {n:'France 24',u:'https://www.france24.com/en/rss',t:'gen'},
+  {n:'Kyiv Independent',u:'https://kyivindependent.com/feed/',t:'mil',open:true},
+  {n:'The Cradle',u:'https://thecradle.co/rss',t:'reg',open:true},
+  {n:'Iran International',u:'https://www.iranintl.com/en/rss',t:'reg',open:true},
+  {n:'Arab News',u:'https://www.arabnews.com/rss.xml',t:'reg',open:true},
+  {n:'Defense One',u:'https://www.defenseone.com/rss/all/',t:'mil',open:true},
+  {n:'The War Zone',u:'https://www.thedrive.com/the-war-zone/rss',t:'mil',open:true},
+  {n:'Anadolu Agency',u:'https://www.aa.com.tr/en/rss/default?cat=world',t:'reg',open:true},
+  {n:'Ukrinform',u:'https://www.ukrinform.net/rss/block-lastnews',t:'mil',open:true},
+];
+
+async function fetchViaProxy(feedUrl,timeout=11000){
+  const proxies=[
+    u=>'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(u),
+    u=>'https://api.allorigins.win/get?url='+encodeURIComponent(u),
+    u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
+  ];
+  for(const proxy of proxies){
+    try{
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),timeout);
+      const r=await fetch(proxy(feedUrl),{signal:ctrl.signal});
+      clearTimeout(tid);
+      if(!r.ok)continue;
+      const txt=await r.text();
+      // rss2json returns JSON
+      if(proxy(feedUrl).includes('rss2json')){
+        const j=JSON.parse(txt);
+        if(j.status==='ok'&&j.items?.length){
+          return j.items.map(i=>({
+            title:i.title||'',url:i.link||'#',
+            summary:(i.description||'').replace(/<[^>]+>/g,'').slice(0,300),
+            pubDate:i.pubDate||''
+          }));
+        }
+        continue;
+      }
+      // allorigins returns {contents:...}
+      if(proxy(feedUrl).includes('allorigins')){
+        const j=JSON.parse(txt);
+        if(j.contents)return parseRSS(j.contents);
+        continue;
+      }
+      // corsproxy returns raw XML
+      return parseRSS(txt);
+    }catch(_){continue;}
+  }
+  return null;
+}
+
+async function loadAllFallback(){
+  const pool=[];
+  const sources=[];
+  const BATCH_FB=4, GAP_FB=600;
+  let done=0;
+  for(let i=0;i<FALLBACK_FEEDS.length;i+=BATCH_FB){
+    const wave=FALLBACK_FEEDS.slice(i,i+BATCH_FB);
+    await Promise.all(wave.map(async feed=>{
+      const raw=await fetchViaProxy(feed.u);
+      done++;
+      setProg(20+Math.round(done/FALLBACK_FEEDS.length*75));
+      if(raw&&raw.length){
+        const items=raw
+          .filter(i=>isRelevant_fb(feed.open,i.title+' '+i.summary))
+          .slice(0,20)
+          .map(i=>({
+            title:i.title,url:i.url,summary:i.summary,pubDate:i.pubDate,
+            source:feed.n,type:feed.t,time:ago(i.pubDate),
+            category:catOf_fb(i.title+' '+i.summary),
+            geo:geoFor_fb(i.title+' '+i.summary)
+          }));
+        pool.push(...items);
+        state.news=dedup(pool);
+        sources.push({f:{n:feed.n,t:feed.t},s:'ok'});
+        renderFeedFiltered();
+        setThreat(state.news);
+        if(state.globe)refreshGlobe();
+      }else{
+        sources.push({f:{n:feed.n,t:feed.t},s:'fail'});
+      }
+      state.status=sources;
+      renderSources();
+    }));
+    if(i+BATCH_FB<FALLBACK_FEEDS.length)await new Promise(r=>setTimeout(r,GAP_FB));
+  }
+  return pool;
+}
+
+const setProg=pct=>{
+  document.getElementById('prog').style.width=pct+'%';
+  const fill=document.getElementById('boot-fill');
+  if(fill)fill.style.width=pct+'%';
+  // Only trigger boot dismiss on real success (pct=100 AND articles exist)
+  if(pct>=100&&!_bootDismissed&&state.news.length>0)setTimeout(dismissBoot,400);
+};
+
+let _bootDismissed=false;
+let _bootMinPassed=false;
+setTimeout(()=>{ _bootMinPassed=true; },8000); // minimum 8s on screen
+
+function dismissBoot(){
+  if(_bootDismissed)return;
+  if(!_bootMinPassed){ setTimeout(dismissBoot,400); return; } // wait for minimum
+  _bootDismissed=true;
+  const ov=document.getElementById('boot-overlay');
+  if(!ov)return;
+  ov.classList.add('hidden');
+  setTimeout(()=>{ ov.style.display='none'; },600);
+}
+
+const BOOT_MSGS=[
+  '// ESTABLISHING SECURE CHANNEL //',
+  '// LOCATING INTELLIGENCE FEEDS //',
+  '// AUTHENTICATING SOURCES //',
+  '// INTEL LOADING //',
+  '// SCANNING CONFLICT ZONES //',
+  '// TRIANGULATING GEO DATA //',
+  '// DECRYPTING TRANSMISSIONS //',
+  '// FEED ACQUISITION ACTIVE //',
+];
+let _bootMsgIdx=0;
+const _bootMsgTimer=setInterval(()=>{
+  if(_bootDismissed){clearInterval(_bootMsgTimer);return;}
+  const el=document.getElementById('boot-msg');
+  if(el){_bootMsgIdx=(_bootMsgIdx+1)%BOOT_MSGS.length;el.innerHTML=BOOT_MSGS[_bootMsgIdx]+'<span class="boot-cursor">█</span>';}
+},700);
+
+// ── FULL-SCREEN HEX BACKGROUND ────────────────────────────────────
+// Generates enough characters to flood the entire viewport.
+// Uses word-break:break-all so rows wrap edge-to-edge naturally.
+// Resamples at a lower rate (150ms) to reduce reflow cost.
+const _bootHexTimer=setInterval(()=>{
+  if(_bootDismissed){clearInterval(_bootHexTimer);return;}
+  const el=document.getElementById('boot-hex-txt');
+  if(!el)return;
+  const H='0123456789ABCDEF';
+  // Estimate how many chars fill the viewport.
+  // At 11px font + 1.5px letter-spacing ≈ ~8px per char.
+  // Aim for viewport_width/7 chars per line × viewport_height/17 rows.
+  const cols=Math.ceil(window.innerWidth/7)+4;
+  const rows=Math.ceil(window.innerHeight/17)+2;
+  // Build as one long string with newlines — word-break handles line wrapping
+  let s='';
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++) s+=H[Math.random()*16|0];
+    s+='\n';
+  }
+  el.textContent=s;
+},150);
+
+setTimeout(dismissBoot,12000); // hard cap
+
+// ── FULLSCREEN ENGINE ─────────────────────────────────────────────
+let _fsRequested = false;
+
+function requestFS(){
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if(fn) fn.call(el).catch(()=>{});
+  _fsRequested = true;
+  const p = document.getElementById('boot-fs-prompt');
+  if(p) p.style.opacity = '0';
+}
+
+function exitFS(){
+  const fn = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+  if(fn) fn.call(document).catch(()=>{});
+}
+
+function isFullscreen(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function toggleFS(){ isFullscreen() ? exitFS() : requestFS(); }
+
+function bootClick(){ if(!_fsRequested) requestFS(); }
+
+// Show fullscreen prompt after 400ms
+setTimeout(()=>{
+  const p = document.getElementById('boot-fs-prompt');
+  if(p && !_fsRequested) p.style.opacity = '1';
+}, 400);
+
+// Update FS button title on state change
+function _onFSChange(){
+  const btn = document.getElementById('fs-btn');
+  if(btn) btn.title = isFullscreen() ? 'Exit fullscreen (F)' : 'Enter fullscreen (F)';
+}
+document.addEventListener('fullscreenchange',       _onFSChange);
+document.addEventListener('webkitfullscreenchange', _onFSChange);
+document.addEventListener('mozfullscreenchange',    _onFSChange);
+document.addEventListener('MSFullscreenChange',     _onFSChange);
+
+// F key shortcut
+document.addEventListener('keydown', e=>{
+  if((e.key==='f'||e.key==='F') && !['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) toggleFS();
+});
+
+let _autoRefreshTimer=null;
+
+// ── LOAD FROM SERVER API ─────────────────────────────────────────────
+// ── PRIMARY: server function → FALLBACK: CORS proxies ─────────────
+async function loadAll(){
+  const btn=document.getElementById('rbtn');
+  btn.disabled=true; btn.textContent='...';
+  if(_autoRefreshTimer){clearTimeout(_autoRefreshTimer);_autoRefreshTimer=null;}
+
+  state.news=[]; state.seen.clear();
+  state.status=FEED_NAMES.map(f=>({f,s:'pend'}));
+  renderSources();
+  document.getElementById('grid').innerHTML=
+    '<div class="ld"><div class="sp"></div><span>CONTACTING INTELLIGENCE SERVER…</span>'+
+    '<div class="ld-sub">50 SOURCES · SERVER-SIDE AGGREGATION</div></div>';
+  setProg(12);
+
+  let usedFallback=false;
+
+  try{
+    // ── ATTEMPT 1: Netlify server function ──────────────
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),3000); // GitHub Pages: fail fast, use CORS fallback
+    let data=null;
+    try{
+      const res=await fetch(API_URL,{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+      clearTimeout(tid);
+      if(res.ok){
+        data=await res.json();
+        if(!data.articles?.length) data=null; // empty response = treat as failure
+      }
+    }catch(e){ clearTimeout(tid); data=null; }
+
+    if(data){
+      // ── Server response success ──────────────────────
+      setProg(75);
+      state.news=(data.articles||[]).map(a=>({...a,time:ago(a.pubDate)}));
+      if(data.sources?.length) state.status=data.sources.map(s=>({f:{n:s.n,t:s.t||'gen'},s:s.s}));
+      if(data.stale){
+        document.getElementById('grid').insertAdjacentHTML('afterbegin',
+          '<div style="background:rgba(255,144,0,.1);border:1px solid rgba(255,144,0,.3);'+
+          'padding:8px 14px;font-size:9px;letter-spacing:2px;color:var(--amber);margin-bottom:8px">'+
+          '⚠ SERVING CACHED DATA</div>');
+      }
+      renderFeedFiltered();
+      setThreat(state.news);
+      if(state.globe)refreshGlobe();
+      updateLastRefreshed(data.ok||0, data.cachedAt);
+      setProg(100); setTimeout(()=>setProg(0),900);
+
+    }else{
+      // ── FALLBACK: client-side CORS proxies ──────────
+      usedFallback=true;
+      document.getElementById('grid').innerHTML=
+        '<div class="ld"><div class="sp"></div><span>DIRECT FEED ACQUISITION…</span>'+
+        '<div class="ld-sub">SERVER UNAVAILABLE · USING DIRECT PROXIES</div></div>';
+      state.status=FEED_NAMES.map(f=>({f,s:'pend'}));
+      renderSources();
+      setProg(18);
+      const pool=await loadAllFallback();
+      if(pool.length){
+        state.news=dedup(pool);
+        renderFeedFiltered();
+        setThreat(state.news);
+        if(state.globe)refreshGlobe();
+        updateLastRefreshed(state.status.filter(x=>x.s==='ok').length, null);
+        setProg(100); setTimeout(()=>setProg(0),900);
+      }else{
+        document.getElementById('grid').innerHTML=
+          '<div class="errbox">'+t('all_failed')+'<br>'+
+          '<span style="font-size:9px;opacity:.6">ALL PROXIES FAILED — CHECK CONNECTION</span></div>';
+        setProg(0);
+      }
+    }
+
+  }catch(err){
+    console.error('[WARWATCHER] loadAll fatal:',err);
+    document.getElementById('grid').innerHTML=
+      '<div class="errbox">'+t('all_failed')+'<br>'+
+      '<span style="font-size:9px;opacity:.6">'+err.message+'</span></div>';
+    setProg(0);
+  }finally{
+    renderSources();
+    btn.disabled=false; btn.textContent='↻ REFRESH';
+    _autoRefreshTimer=setTimeout(()=>loadAll(), usedFallback?8*60*1000:5*60*1000);
+  }
+}
+
+function renderGrid(news){
+  const src=news||state.news;
+  const list=news?src:src.filter(a=>state.filter==='all'||a.category===state.filter);
+  document.getElementById('cnt').textContent=list.length+' ART';
+  if(!list.length){document.getElementById('grid').innerHTML='<div class="errbox">'+t('no_intel')+'</div>';return;}
+  const newK=new Set(list.map(a=>a.title.slice(0,55)));
+  const added=new Set([...newK].filter(k=>!state.seen.has(k)));
+  newK.forEach(k=>state.seen.add(k));
+  let nc=0;
+  document.getElementById('grid').innerHTML=list.map(a=>{
+    const fresh=added.has(a.title.slice(0,55));const delay=fresh?(nc++)*0.04:0;
+    return '<a class="card '+a.category+(fresh?' is-new':'')+'" href="'+esc(a.url)+'" target="_blank" rel="noopener noreferrer"'+(fresh?' style="animation-delay:'+delay+'s"':'')+'>'+
+      '<div class="cmeta"><span class="ctag '+a.category+'">'+catLbl(a.category)+'</span>'+
+      '<span class="csrc">'+esc(a.source)+'</span>'+
+      (a.translated?'<span style="font-size:7px;color:var(--teal);letter-spacing:1px;border:1px solid var(--teal);padding:1px 3px;opacity:.7">🌐 TRANSLATED</span>':'')+
+      '<span class="ctm">'+esc(a.time)+'</span></div>'+
+      '<div class="ctitle">'+esc(a.title)+'</div>'+
+      '<div class="csum">'+esc(a.summary)+'</div></a>';
+  }).join('');
+  setTicker(list);
+}
+
+function updateLastRefreshed(ok, cachedAt){
+  const el=document.getElementById('src-stat');
+  const d=cachedAt?new Date(cachedAt):new Date();
+  const ts=d.toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  el.title='Server cached at '+ts+' · '+ok+' sources online';
+}
+
+function renderSources(){
+  const ok=state.status.filter(x=>x.s==='ok').length;
+  const el=document.getElementById('src-stat');
+  el.textContent=ok+'/'+FEED_NAMES.length;
+  el.style.color=ok>=25?'var(--green)':ok>=10?'var(--amber)':'var(--red)';
+  const icon={gen:'◈',mil:'⚔',nuc:'☢',reg:'⊕'};
+  document.getElementById('slist').innerHTML=state.status.map(x=>{
+    const dot=x.s==='ok'?'g':x.s==='swap'?'a':'off';
+    const bdg=x.s==='ok'?'✓':x.s==='fail'?'✕':x.s==='swap'?'↻':'·';
+    const col=x.s==='ok'?'var(--green)':x.s==='fail'?'var(--t3)':x.s==='swap'?'var(--amber)':'var(--t3)';
+    return '<div class="si '+x.s+'"><div class="dot '+dot+'"></div>'+
+      '<span style="color:var(--t3);margin-right:4px;font-size:9px">'+(icon[x.f.t]||'◈')+'</span>'+
+      '<span class="si-nm">'+esc(x.f.n)+'</span>'+
+      '<span class="si-ic" style="color:'+col+'">'+bdg+'</span></div>';
+  }).join('');
+}
+renderSources();
+
+const _ticker={items:[],lastKeys:new Set()};
+function buildTickerItem(a){const col=a.category==='urg'?'tick-urg':a.category==='nuc'?'tick-nuc':'tick-mil';const badge=a.category==='urg'?'⚡ BREAKING':a.category==='nuc'?'☢ NUCLEAR':'⚔ STRIKE';return'<span class="'+col+'"><span class="tick-badge">'+badge+'</span><span class="tick-src">'+esc(a.source.toUpperCase())+'</span>'+esc(a.title)+'</span><span class="tick-sep">✦</span>';}
+function buildTickerFallback(list){return list.slice(0,8).map(a=>'<span class="tick-dim"><span class="tick-src">'+esc(a.source.toUpperCase())+'</span>'+esc(a.title)+'</span><span class="tick-sep">·</span>').join('');}
+
+// ── SEAMLESS TICKER ENGINE ─────────────────────────────────────────
+// One rAF loop runs forever. New content goes into _tickerPending.
+// At the natural wrap-around seam (when _tickerX resets to 0), if
+// there is pending content we silently swap it in — zero mid-scroll
+// DOM mutation, zero visible glitch.
+const _PX_PER_SEC   = 200;     // scroll speed px/s
+let   _tickerX      = 0;       // current offset px
+let   _tickerHalfW  = 1200;    // width of one copy (a or b), px
+let   _tickerRafId  = null;
+let   _tickerLastTs = null;
+let   _tickerPending = null;   // null = nothing waiting; string = html to swap at next seam
+
+function _applyPending(){
+  // Called only at the seam (when _tickerX just wrapped back to ~0)
+  if(_tickerPending === null) return;
+  const a = document.getElementById('tkr-a');
+  const b = document.getElementById('tkr-b');
+  if(!a || !b) return;
+  a.innerHTML = _tickerPending;
+  b.innerHTML = _tickerPending;
+  _tickerPending = null;
+  // Re-measure half width — padding-left on track is baked in, so use a.scrollWidth
+  void a.offsetWidth;
+  _tickerHalfW = Math.max(200, a.scrollWidth);
+}
+
+function _tickerLoop(ts){
+  if(_tickerLastTs !== null){
+    const dt    = Math.min(ts - _tickerLastTs, 100); // clamp big gaps (tab blur etc)
+    const moved = (dt / 1000) * _PX_PER_SEC;
+    _tickerX   += moved;
+
+    // Detect seam crossing — swap pending content here, invisibly
+    if(_tickerX >= _tickerHalfW){
+      _tickerX -= _tickerHalfW;   // wrap first
+      _applyPending();             // then update DOM at the invisible reset point
+    }
+
+    const track = document.getElementById('tkr-track');
+    if(track) track.style.transform = 'translateX(' + (-_tickerX).toFixed(2) + 'px)';
+  }
+  _tickerLastTs = ts;
+  _tickerRafId  = requestAnimationFrame(_tickerLoop);
+}
+
+function _startTicker(){
+  if(_tickerRafId) return;
+  _tickerLastTs = null;
+  _tickerRafId  = requestAnimationFrame(_tickerLoop);
+}
+
+// Public: set content immediately (first load) or queue it (updates)
+function applyTickerContent(html, immediate){
+  const track = document.getElementById('tkr-track');
+  const a     = document.getElementById('tkr-a');
+  const b     = document.getElementById('tkr-b');
+  if(!track || !a || !b) return;
+  track.style.animation = 'none'; // kill any old CSS animation
+
+  if(immediate || !_tickerRafId){
+    // First load — write immediately and start the loop
+    a.innerHTML = html;
+    b.innerHTML = html;
+    void a.offsetWidth;
+    _tickerHalfW = Math.max(200, a.scrollWidth);
+    _tickerX     = 0;
+    _startTicker();
+  } else {
+    // Ticker already running — queue for seam swap, no DOM touch now
+    _tickerPending = html;
+  }
+}
+
+function setTicker(list){
+  const urgent = list.filter(a=>a.category==='urg');
+  const nukes  = list.filter(a=>a.category==='nuc');
+  const hot    = list.filter(a=>a.category==='mil'&&WAR_RX.test(a.title));
+  const items  = [...urgent,...nukes,...hot].slice(0,24);
+
+  if(!items.length){
+    // No breaking news — fall back to top headlines
+    const html = buildTickerFallback(list);
+    // Only queue if content actually changed
+    const key = html.slice(0,80);
+    if(_ticker._fbKey === key) return;
+    _ticker._fbKey = key;
+    applyTickerContent(html, !_tickerRafId);
+    _ticker.items = []; _ticker.lastKeys.clear();
+    return;
+  }
+  _ticker._fbKey = null;
+
+  const newKeys = new Set(items.map(a=>a.title.slice(0,50)));
+  const hasNew  = [...newKeys].some(k=>!_ticker.lastKeys.has(k));
+  if(!hasNew && _ticker.items.length > 0) return; // nothing changed
+
+  // Merge: new items first, then any existing ones not already included
+  const merged = [
+    ...items,
+    ..._ticker.items.filter(a=>!newKeys.has(a.title.slice(0,50)))
+  ].slice(0,24);
+
+  _ticker.items    = merged;
+  _ticker.lastKeys = new Set(merged.map(a=>a.title.slice(0,50)));
+
+  applyTickerContent(merged.map(buildTickerItem).join(''), !_tickerRafId);
+}
+
+function setThreat(arts){
+  let s=42;const txt=arts.map(a=>(a.title+' '+a.summary).toLowerCase()).join(' ');
+  [['nuclear',10],['warhead',10],['attack',8],['strike',8],['killed',7],['missile',7],['war',6],['bomb',6],['rocket',5],['houthi',5],['irgc',5],['escalat',5],['drone',4],['troops',4]].forEach(([k,v])=>{if(txt.includes(k))s=Math.min(98,s+v);});
+  [['ceasefire',-5],['talks',-3],['deal',-3],['negotiat',-4]].forEach(([k,v])=>{if(txt.includes(k))s=Math.max(20,s+v);});
+  if(arts.filter(a=>a.category==='urg').length>3)s=Math.min(98,s+8);
+  document.getElementById('tb').style.width=s+'%';document.getElementById('ac').textContent=arts.length;
+  const tv=document.getElementById('tv'),td=document.getElementById('td');
+  tv.textContent=s+'/100';
+  if(s>=80){tv.style.color='var(--red)';td.textContent=t('threat_d_critical');}
+  else if(s>=60){tv.style.color='var(--amber)';td.textContent=t('threat_d_high');}
+  else if(s>=40){tv.style.color='#ddcc00';td.textContent=t('threat_d_elevated');}
+  else{tv.style.color='var(--green)';td.textContent=t('threat_d_moderate');}
+}
+
+
+let _feedCat='all',_feedSort='time';
+function feedFilter(cat,btn){
+  _feedCat=cat;
+  document.querySelectorAll('.ff-btn[id^="ff-"]:not([id^="ff-sort"])').forEach(b=>{b.classList.remove('on');b.style.background='';b.style.borderColor='';b.style.color='';});
+  btn.classList.add('on');
+  const cols={all:'var(--red)',mil:'var(--red)',dip:'var(--blue)',nuc:'var(--amber)',reg:'var(--purple)',urg:'var(--urg)'};
+  const bgs={all:'var(--redb)',mil:'var(--redb)',dip:'var(--blueb)',nuc:'var(--amberb)',reg:'var(--purpleb)',urg:'var(--urgb)'};
+  if(cat!=='all'){btn.style.background=bgs[cat]||'';btn.style.borderColor=cols[cat]||'';btn.style.color=cols[cat]||'';}
+  renderFeedFiltered();
+}
+function feedSort(mode,btn){_feedSort=mode;document.querySelectorAll('.ff-btn[id^="ff-sort"]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderFeedFiltered();}
+function renderFeedFiltered(){let list=[...state.news];if(_feedCat!=='all')list=list.filter(a=>a.category===_feedCat);if(_feedSort==='imp'){const IMP={urg:5,nuc:4,mil:3,dip:2,reg:1};list.sort((a,b)=>(IMP[b.category]||0)-(IMP[a.category]||0));}else{list.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));}renderGrid(list);}
+
+function toggleFeed(){
+  if(window._isMobile){mobileNav('feed');return;}
+  state.feedOpen=!state.feedOpen;
+  document.getElementById('feed-panel').classList.toggle('open',state.feedOpen);
+  const btn=document.getElementById('feed-tb-btn');
+  if(btn){btn.style.background=state.feedOpen?'rgba(0,204,224,.22)':'rgba(0,204,224,.08)';btn.textContent=state.feedOpen?'✕ FEED':'≡ FEED';}
+  setTimeout(()=>{if(state.globe){const w=document.getElementById('globe-wrap');state.globe.width(w.clientWidth).height(w.clientHeight||400);refreshGlobe();}},280);
+}
+
+// toggleSide kept as stub for JS compatibility — side is always open on desktop
+function toggleSide(){
+  if(window._isMobile){mobileNav('status');return;}
+  // Desktop: side panel is always visible — no toggle needed
+}
+function setView(v){if(v==='feed')toggleFeed();}
+
+// ── GLOBE ─────────────────────────────────────────────────────────
+function spreadPoints(pts,lk,nk){const MIN=0.9,MAX=60;for(let it=0;it<MAX;it++){let mv=false;for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dl=pts[i][lk]-pts[j][lk],dn=pts[i][nk]-pts[j][nk];const d=Math.sqrt(dl*dl+dn*dn);if(d<MIN&&d>0){const fx=(dl/d)*(MIN-d)*.5,fy=(dn/d)*(MIN-d)*.5;pts[i][lk]+=fx;pts[i][nk]+=fy;pts[j][lk]-=fx;pts[j][nk]-=fy;mv=true;}else if(d===0){pts[i][lk]+=Math.random()*.4-.2;mv=true;}}if(!mv)break;}return pts;}
+
+function initGlobe(){
+  if(state.globe)return;
+  const wrap=document.getElementById('globe-wrap');
+  const mob=window._isMobile||false;
+  const getH=()=>{const h=wrap.clientHeight||wrap.getBoundingClientRect().height;return h>40?h:(mob?window.innerHeight-120:window.innerHeight-120);};
+  const EARTH_TEX='https://unpkg.com/three-globe/example/img/earth-night.jpg';
+  const BUMP_TEX='https://unpkg.com/three-globe/example/img/earth-topology.png';
+  const SKY_TEX='https://unpkg.com/three-globe/example/img/night-sky.png';
+  state.globe=Globe({rendererConfig:{antialias:true,alpha:true,powerPreference:mob?'default':'high-performance'}})(wrap)
+    .globeImageUrl(EARTH_TEX).bumpImageUrl(BUMP_TEX).backgroundImageUrl(SKY_TEX)
+    .backgroundColor('rgba(0,0,0,0)')
+    .atmosphereColor(mob?'rgba(80,150,255,0.45)':'rgba(50,110,255,0.6)')
+    .atmosphereAltitude(mob?0.18:0.30)
+    .enablePointerInteraction(true)
+    .width(wrap.clientWidth||window.innerWidth).height(getH());
+  const rdr=state.globe.renderer();
+  rdr.setPixelRatio(mob?Math.min(window.devicePixelRatio,2):window.devicePixelRatio);
+  const maxAniso=rdr.capabilities.getMaxAnisotropy();
+  function boostAniso(){try{state.globe.scene().traverse(obj=>{if(!obj.isMesh||!obj.material)return;const mats=Array.isArray(obj.material)?obj.material:[obj.material];mats.forEach(m=>{let changed=false;['map','bumpMap','normalMap','specularMap','emissiveMap','alphaMap'].forEach(slot=>{const t=m[slot];if(t&&t.image&&t.anisotropy<maxAniso){t.anisotropy=maxAniso;t.needsUpdate=true;changed=true;}});if(changed){m.needsUpdate=true;}});});}catch(_){}}
+  state.globe.onGlobeReady(()=>{try{const mat=state.globe.globeMaterial();if(mat){mat.shininess=15;mat.needsUpdate=true;}}catch(_){}[800,1800,3500].forEach(t=>setTimeout(boostAniso,t));});
+  const ctrl=state.globe.controls();
+  ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.22;ctrl.enableZoom=true;ctrl.minDistance=mob?150:100;ctrl.maxDistance=620;ctrl.enableDamping=true;ctrl.dampingFactor=0.06;ctrl.enablePan=false;
+  wrap.addEventListener('mousedown',()=>ctrl.autoRotate=false);
+  wrap.addEventListener('touchstart',()=>ctrl.autoRotate=false,{passive:true});
+  new ResizeObserver(()=>{if(!state.globe)return;state.globe.width(wrap.clientWidth||window.innerWidth).height(getH());rdr.setPixelRatio(mob?Math.min(window.devicePixelRatio,2):window.devicePixelRatio);}).observe(wrap);
+  if(mob)setTimeout(()=>{state.globe.width(wrap.clientWidth||window.innerWidth).height(getH());refreshGlobe();},300);
+  let _pulseCount=0;const _pulseMax=Math.ceil(10000/800);
+  const _pulseTimer=setInterval(()=>{if(_pulseCount++>=_pulseMax){clearInterval(_pulseTimer);return;}if(state.globe&&state.news.length>0)refreshGlobe();},800);
+}
+
+const _tip=document.getElementById('globe-tip');
+const _tipTitle=document.getElementById('globe-tip-title');
+const _tipMeta=document.getElementById('globe-tip-meta');
+const _tipBadge=document.getElementById('globe-tip-badge');
+function showTip(e,article,color,label){if(!_tip||!article)return;const words=(article.title||'').split(' ');const short=words.slice(0,8).join(' ')+(words.length>8?'…':'');_tipTitle.textContent=short;_tipMeta.textContent='▸ '+article.source+' · '+article.time;_tipBadge.textContent=label;_tip.style.color=color;_tip.style.borderLeftColor=color;_tip.style.display='block';moveTip(e);}
+function moveTip(e){if(!_tip||_tip.style.display==='none')return;const pad=14,tw=_tip.offsetWidth||200,th=_tip.offsetHeight||60;let x=e.clientX+pad,y=e.clientY-th/2;if(x+tw>window.innerWidth-pad)x=e.clientX-tw-pad;if(y<pad)y=pad;if(y+th>window.innerHeight-pad)y=window.innerHeight-th-pad;_tip.style.left=x+'px';_tip.style.top=y+'px';}
+function hideTip(){if(_tip)_tip.style.display='none';}
+document.addEventListener('mousemove',moveTip);
+
+function ageClass(pubDate){const h=(Date.now()-new Date(pubDate))/3600000;if(h>48)return'old';if(h>24)return'stale';return'';}
+function ageOpacity(pubDate){const h=(Date.now()-new Date(pubDate))/3600000;if(h>48)return 0.12;if(h>24)return 0.28;if(h>12)return 0.65;return 1.0;}
+
+function refreshGlobe(){
+  if(!state.globe)return;
+  function pingEl(article,col,lvClass){
+    const op=ageOpacity(article.pubDate||'');const stl=ageClass(article.pubDate||'');
+    const sz=lvClass==='lv3'?22:lvClass==='lv2'?17:14;const label=catLbl(article.category||'reg');
+    const el=document.createElement('div');
+    el.className='gping '+lvClass+(stl?' '+stl:'');
+    el.style.cssText='width:'+sz+'px;height:'+sz+'px;opacity:'+op+';pointer-events:auto';
+    el.innerHTML='<div class="gping-ring" style="color:'+col+'"></div><div class="gping-ring gping-ring2" style="color:'+col+'"></div><div class="gping-hline" style="background:'+col+'"></div><div class="gping-vline" style="background:'+col+'"></div><div class="gping-core" style="width:'+(sz*.42)+'px;height:'+(sz*.42)+'px;border-color:'+col+';background:'+col+'1a"></div>';
+    el.addEventListener('mouseenter',e=>showTip(e,article,col,label));
+    el.addEventListener('mouseleave',hideTip);
+    el.addEventListener('click',e=>{e.stopPropagation();hideTip();if(window._isMobile)showMobTap(article.title,article.source,article.time,article.url,col,label);else window.open(article.url,'_blank');});
+    return el;
+  }
+  if(state.warMode){
+    const wa=state.news.filter(a=>a.geo&&(a.category==='mil'||a.category==='urg'));
+    const pts=wa.map(a=>({lat:a.geo[0],lng:a.geo[1],article:a,lv:warLevel((a.title+' '+a.summary).toLowerCase())}));
+    spreadPoints(pts,'lat','lng');
+    const arcs=wa.map(a=>{const o=detectOrigin(a.title+' '+a.summary,a.geo);if(!o)return null;const[fla,fln]=o,[tla,tln]=a.geo;if(Math.hypot(tla-fla,tln-fln)<0.8)return null;const lv=warLevel((a.title+' '+a.summary).toLowerCase());return{fla,fln,tla,tln,lv,alt:Math.min(0.55,Math.max(0.08,Math.hypot(tla-fla,tln-fln)*0.016)),article:a};}).filter(Boolean);
+    state.globe.pointsData([]).htmlElementsData(pts).htmlLat(d=>d.lat).htmlLng(d=>d.lng).htmlAltitude(0.005)
+      .htmlElement(d=>{const c=d.lv===3?'#ff2038':d.lv===2?'#ff9000':'#ff6655';return pingEl(d.article,c,'lv'+d.lv);})
+      .arcsData(arcs).arcStartLat(d=>d.fla).arcStartLng(d=>d.fln).arcEndLat(d=>d.tla).arcEndLng(d=>d.tln)
+      .arcAltitude(d=>d.alt).arcColor(d=>{const c=d.lv===3?[255,32,56]:d.lv===2?[255,144,0]:[255,100,80];const op=ageOpacity(d.article.pubDate||'');return['rgba('+c+',0)','rgba('+c+','+op+')'];})
+      .arcStroke(d=>d.lv===3?1.8:d.lv===2?1.2:.8).arcDashLength(0.4).arcDashGap(0.12).arcDashAnimateTime(d=>d.lv===3?900:1300);
+    const cnt={3:0,2:0,1:0};pts.forEach(p=>cnt[p.lv]=(cnt[p.lv]||0)+1);
+    document.getElementById('gstats').innerHTML='<div class="gst"><div class="gst-v" style="color:var(--red)">'+pts.length+'</div><div class="gst-l">'+t('lbl_events')+'</div></div><div class="gst"><div class="gst-v" style="color:var(--amber)">'+arcs.length+'</div><div class="gst-l">'+t('lbl_trajectories')+'</div></div>'+(cnt[3]?'<div class="gst"><div class="gst-v" style="color:#ff2038">'+cnt[3]+'</div><div class="gst-l">'+t('lbl_critical')+'</div></div>':'')+(cnt[2]?'<div class="gst"><div class="gst-v" style="color:#ff9000">'+cnt[2]+'</div><div class="gst-l">'+t('lbl_strike')+'</div></div>':'');
+    document.getElementById('gleg').innerHTML='<div class="gleg-hd">'+t('strike_layer')+'</div><div class="gleg-row"><div class="gleg-star" style="color:#ff2038">✦</div>'+t('lbl_critical')+'</div><div class="gleg-row"><div class="gleg-star" style="color:#ff9000">✦</div>'+t('lbl_strike')+'</div><div class="gleg-row"><div class="gleg-star" style="color:#ff6655">✦</div>'+t('lbl_event')+'</div><div class="gleg-row" style="margin-top:6px;color:var(--t3);font-size:8px">⬡ '+t('ring_recency')+'</div><div class="gleg-row" style="color:var(--t3);font-size:8px">↔ '+t('arc_trajectory')+'</div><div class="gleg-row" style="color:var(--t3);font-size:8px;opacity:.5">'+t('faded_old')+'</div>';
+  }else{
+    const raw=state.news.filter(a=>(state.filter==='all'||a.category===state.filter)&&a.geo);
+    const pts=raw.map(a=>({...a,_la:a.geo[0],_ln:a.geo[1]}));spreadPoints(pts,'_la','_ln');
+    const cnt={mil:0,dip:0,nuc:0,reg:0,urg:0};pts.forEach(a=>cnt[a.category]=(cnt[a.category]||0)+1);
+    state.globe.arcsData([]).arcStroke(0).pointsData([]).htmlElementsData(pts).htmlLat(d=>d._la).htmlLng(d=>d._ln).htmlAltitude(0.005)
+      .htmlElement(d=>{const col=CAT_COL[d.category]||'#888';const lv=d.category==='urg'?'lv3':d.category==='mil'?'lv2':'lv1';return pingEl(d,col,lv);});
+    document.getElementById('gstats').innerHTML='<div class="gst"><div class="gst-v" style="color:var(--teal)">'+pts.length+'</div><div class="gst-l">'+t('lbl_mapped')+'</div></div>'+Object.entries(cnt).filter(([,v])=>v>0).map(([k,v])=>'<div class="gst"><div class="gst-v" style="color:'+CAT_COL[k]+'">'+v+'</div><div class="gst-l">'+catLbl(k).slice(0,6)+'</div></div>').join('');
+    document.getElementById('gleg').innerHTML='<div class="gleg-hd">'+t('intel_layer')+'</div><div class="gleg-row"><div class="gleg-circ" style="background:var(--red)"></div>'+t('cat_mil')+'</div><div class="gleg-row"><div class="gleg-circ" style="background:var(--blue)"></div>'+t('cat_dip')+'</div><div class="gleg-row"><div class="gleg-circ" style="background:var(--amber)"></div>'+t('cat_nuc')+'</div><div class="gleg-row"><div class="gleg-circ" style="background:var(--purple)"></div>'+t('cat_reg')+'</div><div class="gleg-row"><div class="gleg-circ" style="background:var(--urg)"></div>'+t('cat_urg')+'</div><div class="gleg-row" style="margin-top:6px;color:var(--t3);font-size:8px;opacity:.5">'+t('faded_old')+'</div>';
+  }
+}
+
+function setWarMode(w){
+  state.warMode=w;
+  const tbNews=document.getElementById('ws-tb-news');const tbWar=document.getElementById('ws-tb-war');
+  if(tbNews)tbNews.className='vbtn'+(w?'':' on');if(tbWar)tbWar.className='vbtn'+(w?' on':'');
+  refreshGlobe();
+}
+
+function showMobTap(title,source,time,url,color,label){
+  if(!window._isMobile)return;
+  const bar=document.getElementById('mob-tap-bar');const cat=document.getElementById('mob-tap-cat');
+  cat.textContent=label;cat.style.color=color;
+  document.getElementById('mob-tap-title').textContent=title;document.getElementById('mob-tap-src').textContent='▸ '+source+' · '+time;
+  document.getElementById('mob-tap-link').href=url;bar.style.display='block';
+}
+
+function tick(){
+  const n=new Date();
+  document.getElementById('ct').textContent=n.toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  let tz='';try{const p=new Intl.DateTimeFormat('en-US',{timeZoneName:'short'}).formatToParts(n);tz=(p.find(x=>x.type==='timeZoneName')||{value:''}).value;}catch(_){}
+  document.getElementById('cd').textContent=n.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()+(tz?' · '+tz:'');
+}
+setInterval(tick,500);tick();
+
+(function(){
+  const touch=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+  const ua=navigator.userAgent||'';const mob=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(ua);
+  const small=window.screen.width<=900&&window.screen.height<=900;
+  window._isMobile=touch&&(mob||small);
+  document.body.classList.add(window._isMobile?'is-mobile':'is-desktop');
+})();
+
+let _mobileView='globe';
+function mobileNav(tab){
+  if(!window._isMobile)return;_mobileView=tab;
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  const activeBtn=document.getElementById('bn-'+tab);if(activeBtn)activeBtn.classList.add('on');
+  document.getElementById('globe-panel').classList.remove('mob-active');
+  document.getElementById('feed-panel').classList.remove('mob-active');
+  document.getElementById('side-panel').classList.remove('mob-active');
+  if(tab==='globe'){document.getElementById('globe-panel').classList.add('mob-active');setWarMode(false);if(!state.globe){initGlobe();setTimeout(()=>refreshGlobe(),300);}else refreshGlobe();}
+  else if(tab==='strikes'){document.getElementById('globe-panel').classList.add('mob-active');setWarMode(true);if(!state.globe){initGlobe();setTimeout(()=>refreshGlobe(),300);}else refreshGlobe();document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));document.getElementById('bn-strikes').classList.add('on');}
+  else if(tab==='feed'){document.getElementById('feed-panel').classList.add('mob-active');}
+  else if(tab==='status'){document.getElementById('side-panel').classList.add('mob-active');}
+}
+
+function openSidebar(){if(window._isMobile)mobileNav('status');}
+function closeSidebar(){if(window._isMobile)mobileNav('globe');}
+
+loadAll();
+
+// Restore saved language preference
+try{
+  const saved = localStorage.getItem('ww_lang');
+  if(saved && LANGS[saved] && saved !== 'en') setTimeout(()=>setLang(saved), 100);
+}catch(_){}
+
+// Init globe
+setTimeout(()=>{ if(!state.globe) initGlobe(); setTimeout(()=>refreshGlobe(),300); }, 150);
+
+// Open panels on first load
+setTimeout(()=>{
+  if(window._isMobile){
+    document.getElementById('globe-panel').classList.add('mob-active');
+    document.getElementById('bn-globe').classList.add('on');
+    document.querySelectorAll('.bnav-btn:not(#bn-globe)').forEach(b=>b.classList.remove('on'));
+  } else {
+    if(!state.feedOpen) toggleFeed();
+  }
+}, 200);
+</script>
+</body>
+</html>
